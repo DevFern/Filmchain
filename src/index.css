@@ -1,0 +1,27 @@
+:root {
+  --primary-color: #6a1b9a;
+  --secondary-color: #9c27b0;
+  --accent-color: #e91e63;
+  --background-dark: #0a0a1a;
+  --text-light: #ffffff;
+  --text-dark: #333333;
+}
+
+body {
+  background-color: var(--background-dark);
+  color: var(--text-light);
+  font-family: 'Poppins', sans-serif;
+  margin: 0;
+  padding: 0;
+}
+
+/* Animation Classes */
+.project-card, .talent-card {
+  transition: transform 0.3s ease;
+}
+
+.project-card:hover, .talent-card:hover {
+  transform: translateY(-5px);
+}
+
+/* Add the rest of your CSS here */
