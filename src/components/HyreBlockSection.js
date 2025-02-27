@@ -1,23 +1,30 @@
-function App() {
-  const [activeTab, setActiveTab] = React.useState('jobs');
-  const [selectedJob, setSelectedJob] = React.useState(null);
-  const [selectedTalent, setSelectedTalent] = React.useState(null);
-  const [filters, setFilters] = React.useState({
+// src/components/HyreBlockSection.js
+import React, { useState, useEffect } from 'react';
+import { useWallet } from '../contexts/WalletContext';
+import './HyreBlock.css';
+
+const HyreBlockSection = () => {
+  const { account, error: walletError } = useWallet();
+  
+  const [activeTab, setActiveTab] = useState('jobs');
+  const [selectedJob, setSelectedJob] = useState(null);
+  const [selectedTalent, setSelectedTalent] = useState(null);
+  const [filters, setFilters] = useState({
     location: 'all',
     jobType: 'all',
     experience: 'all',
     department: 'all'
   });
-  const [searchTerm, setSearchTerm] = React.useState('');
-  const [savedJobs, setSavedJobs] = React.useState([1]);
-  const [savedTalents, setSavedTalents] = React.useState([2]);
-  const [applications, setApplications] = React.useState([]);
-  const [showApplicationForm, setShowApplicationForm] = React.useState(false);
-  const [showTalentModal, setShowTalentModal] = React.useState(false);
-  const [viewMode, setViewMode] = React.useState('grid');
-  const [showNotification, setShowNotification] = React.useState(false);
-  const [notificationMessage, setNotificationMessage] = React.useState('');
-  const [notificationType, setNotificationType] = React.useState('success');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [savedJobs, setSavedJobs] = useState([1]);
+  const [savedTalents, setSavedTalents] = useState([2]);
+  const [applications, setApplications] = useState([]);
+  const [showApplicationForm, setShowApplicationForm] = useState(false);
+  const [showTalentModal, setShowTalentModal] = useState(false);
+  const [viewMode, setViewMode] = useState('grid');
+  const [showNotification, setShowNotification] = useState(false);
+  const [notificationMessage, setNotificationMessage] = useState('');
+  const [notificationType, setNotificationType] = useState('success');
 
   // Sample job data
   const jobs = [
@@ -201,26 +208,6 @@ function App() {
 
     return true;
   });
-
-  // Animation variants for framer-motion
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.1
-      }
-    }
-  };
-
-  const itemVariants = {
-    hidden: { y: 20, opacity: 0 },
-    visible: {
-      y: 0,
-      opacity: 1,
-      transition: { type: "spring", stiffness: 100 }
-    }
-  };
 
   // Job Card Component
   const JobCard = ({ job }) => (
@@ -569,4 +556,6 @@ function App() {
       )}
     </div>
   );
-}
+};
+
+export default HyreBlockSection;
