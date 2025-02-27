@@ -1,383 +1,357 @@
 import React, { useState, useEffect } from 'react';
 import { useWallet } from '../contexts/WalletContext';
+import './BlockOffice.css';
 
 const BlockOfficeSection = () => {
   const { account, connectWallet, error: walletError } = useWallet();
-  const [timeFilter, setTimeFilter] = useState('week');
-  const [newsCategory, setNewsCategory] = useState('all');
-  const [showDetailModal, setShowDetailModal] = useState(false);
+  const [activeTab, setActiveTab] = useState('analytics');
+  const [searchTerm, setSearchTerm] = useState('');
   const [selectedFilm, setSelectedFilm] = useState(null);
-  const [showNewsModal, setShowNewsModal] = useState(false);
+  const [showDetailModal, setShowDetailModal] = useState(false);
   const [selectedNews, setSelectedNews] = useState(null);
-  const [isLoading, setIsLoading] = useState(false);
+  const [showNewsModal, setShowNewsModal] = useState(false);
+  const [timeRange, setTimeRange] = useState('week');
+  const [sortBy, setSortBy] = useState('revenue');
 
-  // Mock data for statistics
-  const stats = [
-    { label: 'Total Box Office', value: '$1.2B', icon: 'fa-dollar-sign', trend: 'up', trendValue: '12%' },
-    { label: 'Active Projects', value: '243', icon: 'fa-film', trend: 'up', trendValue: '8%' },
-    { label: 'Investors', value: '18.5K', icon: 'fa-users', trend: 'up', trendValue: '15%' },
-    { label: 'Average ROI', value: '27%', icon: 'fa-chart-line', trend: 'down', trendValue: '3%' }
-  ];
-
-  // Mock data for top films
-  const topFilms = [
+  // Sample data for films
+  const films = [
     {
       id: 1,
-      title: 'Quantum Horizon',
-      director: 'Sarah Chen',
-      poster: 'https://i.ibb.co/d4zkmt45/Quantum-Dreams.jpg',
-      revenue: '$125M',
-      trend: 'up',
-      trendValue: '12%',
-      description: 'A mind-bending journey through parallel universes and quantum realities. When physicist Dr. Alex Mercer discovers a way to access alternate dimensions, he finds himself caught in a web of different versions of his own life.',
-      releaseDate: '2024-02-15',
-      runtime: '2h 18m',
-      cast: ['Michael Chen', 'Elena Petrov', 'James Wilson'],
-      genres: ['Sci-Fi', 'Thriller', 'Drama'],
+      title: "Quantum Horizon",
+      director: "Alexandra Chen",
+      poster: "https://placehold.co/300x450/6a1b9a/ffffff?text=Quantum+Horizon",
+      releaseDate: "2024-02-15",
+      revenue: "$42.8M",
+      trend: "up",
+      trendValue: "+12%",
       rating: 8.4,
-      weeklyRevenue: [12.5, 18.7, 22.3, 25.8, 19.2, 15.6, 10.9]
+      genres: ["Sci-Fi", "Drama", "Adventure"],
+      runtime: "2h 18m",
+      description: "A visionary scientist discovers a way to travel between parallel universes, only to find herself trapped in a reality where her choices led to catastrophic consequences.",
+      cast: ["Emma Stone", "John Boyega", "Michelle Yeoh", "Oscar Isaac"],
+      weeklyRevenue: [3.2, 4.5, 5.1, 4.8, 6.2, 8.5, 10.5]
     },
     {
       id: 2,
-      title: 'The Last Symphony',
-      director: 'Michael Rodriguez',
-      poster: 'https://i.ibb.co/VpHHLnYM/Last-Symphony.jpg',
-      revenue: '$98M',
-      trend: 'up',
-      trendValue: '8%',
-      description: 'A touching story about a deaf musician\'s journey to compose her final masterpiece. Set against the backdrop of 1950s Paris, this emotional drama explores themes of perseverance and artistic expression.',
-      releaseDate: '2024-01-20',
-      runtime: '2h 5m',
-      cast: ['Sophia Laurent', 'Thomas Wright', 'Maria Chen'],
-      genres: ['Drama', 'Music', 'Biography'],
-      rating: 9.1,
-      weeklyRevenue: [8.2, 12.5, 15.8, 20.1, 18.7, 14.2, 8.5]
+      title: "Midnight Serenade",
+      director: "Marcus Johnson",
+      poster: "https://placehold.co/300x450/9c27b0/ffffff?text=Midnight+Serenade",
+      releaseDate: "2024-01-22",
+      revenue: "$38.5M",
+      trend: "down",
+      trendValue: "-5%",
+      rating: 7.9,
+      genres: ["Romance", "Musical", "Drama"],
+      runtime: "2h 05m",
+      description: "In 1950s New Orleans, a struggling jazz pianist and an aspiring singer form an unlikely bond that transforms their lives and music forever.",
+      cast: ["Zendaya", "Daniel Kaluuya", "Ana de Armas", "Daveed Diggs"],
+      weeklyRevenue: [7.2, 6.8, 6.5, 6.2, 5.9, 5.5, 5.2]
     },
     {
       id: 3,
-      title: 'Neon Dreams',
-      director: 'Alex Kim',
-      poster: 'https://i.ibb.co/RT0vfKzb/The-Last-Sunset.jpg',
-      revenue: '$87M',
-      trend: 'down',
-      trendValue: '3%',
-      description: 'In a dystopian future where dreams are commodified and sold as entertainment, a dream harvester discovers a rare dreamscape that could change the world or destroy it.',
-      releaseDate: '2024-03-05',
-      runtime: '1h 58m',
-      cast: ['David Park', 'Lily Chen', 'Robert Johnson'],
-      genres: ['Sci-Fi', 'Cyberpunk', 'Action'],
-      rating: 7.8,
-      weeklyRevenue: [15.2, 18.5, 16.8, 14.2, 12.5, 10.1, 9.7]
-    },
-    {
-      id: 4,
-      title: 'Echoes of Tomorrow',
-      director: 'James Wilson',
-      poster: 'https://i.ibb.co/9kgV2mtk/heroic-super-cat-stockcake.jpg',
-      revenue: '$76M',
-      trend: 'up',
-      trendValue: '5%',
-      description: 'In a near-future society where memories can be digitally stored and traded, a memory detective uncovers a conspiracy that threatens to destabilize the entire system.',
-      releaseDate: '2024-02-28',
-      runtime: '2h 12m',
-      cast: ['Emma Stone', 'Michael B. Jordan', 'Sandra Oh'],
-      genres: ['Thriller', 'Mystery', 'Sci-Fi'],
-      rating: 8.2,
-      weeklyRevenue: [10.5, 12.8, 15.2, 18.7, 16.5, 14.2, 12.1]
-    },
-    {
-      id: 5,
-      title: 'Whispers in the Dark',
-      director: 'Elena Petrov',
-      poster: 'https://i.ibb.co/kGjhMX8/director3.jpg',
-      revenue: '$65M',
-      trend: 'down',
-      trendValue: '2%',
-      description: 'A psychological horror film about a novelist who moves to a remote cabin to finish her book, only to discover that the cabin has a dark history and may be haunted.',
-      releaseDate: '2024-01-05',
-      runtime: '1h 52m',
-      cast: ['Jessica Chastain', 'Oscar Isaac', 'Toni Collette'],
-      genres: ['Horror', 'Psychological', 'Thriller'],
-      rating: 7.5,
-      weeklyRevenue: [14.2, 12.5, 10.8, 9.5, 8.2, 7.5, 6.8]
+      title: "Emerald Legacy",
+      director: "Sofia Patel",
+      poster: "https://placehold.co/300x450/00796b/ffffff?text=Emerald+Legacy",
+      releaseDate: "2024-03-08",
+      revenue: "$51.2M",
+      trend: "up",
+      trendValue: "+18%",
+      rating: 8.7,
+      genres: ["Action", "Adventure", "Fantasy"],
+      runtime: "2h 32m",
+      description: "When an ancient artifact awakens dormant powers within a young archaeologist, she becomes the key to preventing a looming supernatural war.",
+      cast: ["Lupita Nyong'o", "Pedro Pascal", "Ke Huy Quan", "Florence Pugh"],
+      weeklyRevenue: [4.8, 5.6, 6.2, 7.1, 8.3, 9.5, 9.7]
     }
   ];
 
-  // Mock data for news
-  const newsItems = [
+  // Sample data for news
+  const news = [
     {
       id: 1,
-      title: '"Quantum Horizon" Breaks Opening Weekend Records',
-      excerpt: 'The sci-fi thriller has surpassed expectations with a record-breaking $45M opening weekend, setting new benchmarks for independent productions.',
-      content: 'In an unprecedented turn of events, "Quantum Horizon" directed by Sarah Chen has shattered box office expectations with a staggering $45M opening weekend. Industry analysts are calling this a watershed moment for independently financed films on the blockchain platform.\n\nThe film, which was partially funded through FilmChain\'s IndieFund platform, has demonstrated the viability of decentralized funding models for high-concept science fiction productions. Over 15,000 individual investors participated in the funding round, each now standing to receive returns proportional to their investment as the film continues its successful theatrical run.\n\n"This proves that audiences are hungry for innovative storytelling and are willing to support films directly through blockchain platforms," said Chen in a statement. "The traditional studio system isn\'t the only path to commercial success anymore."\n\nThe film\'s success has already triggered increased investment activity on the FilmChain platform, with several upcoming projects seeing funding boosts of 30-50% in the days following "Quantum Horizon\'s" opening weekend.',
-      image: 'https://i.ibb.co/d4zkmt45/Quantum-Dreams.jpg',
-      category: 'box-office',
-      date: 'May 15, 2024',
-      author: 'Michael Thompson',
-      source: 'Blockchain Entertainment Weekly'
+      title: "Quantum Horizon Breaks Opening Weekend Records",
+      image: "https://placehold.co/800x400/6a1b9a/ffffff?text=Quantum+Horizon+News",
+      summary: "Alexandra Chen's sci-fi epic has shattered box office expectations with a $42.8M opening weekend.",
+      date: "March 18, 2024",
+      author: "Michael Rivera",
+      source: "Film Industry Today",
+      category: "box-office",
+      content: "Quantum Horizon, the highly anticipated sci-fi film directed by visionary filmmaker Alexandra Chen, has exceeded all box office projections with a stunning $42.8 million opening weekend.\n\nThe film, which stars Emma Stone as brilliant physicist Dr. Eliza Mercer, has resonated with audiences and critics alike, earning praise for its innovative visual effects and thought-provoking narrative about parallel universes.\n\nIndustry analysts are particularly impressed by the film's performance given its original IP status in a market dominated by franchises and sequels. \"This demonstrates that audiences are still hungry for original, high-concept storytelling when executed with vision and precision,\" noted box office analyst Sarah Johnson.\n\nThe film's success on FilmChain's blockchain distribution platform has also been noteworthy, with record token-based transactions for opening weekend streaming purchases."
     },
     {
       id: 2,
-      title: 'Indie Film "Moonlight Sonata" Secures Distribution Deal',
-      excerpt: 'The award-winning indie drama has secured a major distribution deal following its festival success, marking a milestone for blockchain-funded productions.',
-      content: 'Following its Grand Jury Prize win at the Sundance Film Festival, the blockchain-funded indie drama "Moonlight Sonata" has secured a worldwide distribution deal with Artisan Pictures. The film, directed by newcomer Jasmine Wong, was financed entirely through FilmChain\'s IndieFund platform with over 8,000 individual investors.\n\nThe distribution deal, reportedly worth $12 million, includes theatrical release in major markets as well as streaming rights. This represents one of the largest acquisitions for a blockchain-funded film to date and signals growing acceptance of this funding model within traditional distribution channels.\n\n"We\'re thrilled to bring this beautiful film to audiences worldwide," said Artisan Pictures CEO Robert Martinez. "The fact that it was funded through blockchain technology is a testament to the evolving landscape of film financing."\n\nWong expressed gratitude to the film\'s many investors: "This wouldn\'t have been possible without the support of thousands of believers who funded this project. They took a chance on my vision, and now they\'ll share in its success."\n\nInvestors in the film will receive returns based on the distribution deal as well as ongoing revenue sharing from theatrical and streaming performance, all managed automatically through FilmChain\'s smart contracts.',
-      image: 'https://i.ibb.co/VpHHLnYM/Last-Symphony.jpg',
-      category: 'distribution',
-      date: 'May 12, 2024',
-      author: 'Sarah Johnson',
-      source: 'Film Industry Today'
+      title: "FilmChain Expands Decentralized Distribution to Asian Markets",
+      image: "https://placehold.co/800x400/9c27b0/ffffff?text=FilmChain+Expansion",
+      summary: "The blockchain-based distribution platform announces major expansion into South Korean and Japanese markets.",
+      date: "March 15, 2024",
+      author: "Jennifer Wu",
+      source: "Digital Cinema Report",
+      category: "distribution",
+      content: "FilmChain, the pioneering blockchain-based film distribution platform, has announced a significant expansion into Asian markets, with a particular focus on South Korea and Japan.\n\nThe platform, which has revolutionized film distribution through its decentralized model and transparent revenue sharing, will now offer its services to filmmakers and audiences in these key Asian film markets.\n\n\"We're thrilled to bring FilmChain's innovative distribution model to these vibrant film communities,\" said FilmChain CEO David Park. \"Both South Korea and Japan have dynamic, world-class film industries that we believe will benefit tremendously from our blockchain-based approach to distribution and revenue sharing.\"\n\nThe expansion includes partnerships with major local theaters and streaming platforms, as well as localized versions of the FilmChain platform that cater to regional preferences and payment systems."
     },
     {
       id: 3,
-      title: 'FilmChain Introduces New Investor Analytics Dashboard',
-      excerpt: 'The platform has launched a new analytics tool to help investors track performance metrics in real-time, enhancing transparency in film investments.',
-      content: 'FilmChain has unveiled a comprehensive new analytics dashboard designed to provide investors with unprecedented visibility into the performance of their film investments. The new tool, which launched in beta today, offers real-time data on box office performance, streaming views, and projected returns.\n\n"Transparency is essential in any investment ecosystem," said FilmChain CEO David Chen. "Our new analytics dashboard gives investors the data they need to make informed decisions and track the performance of their portfolio in real-time."\n\nThe dashboard includes features such as geographic revenue breakdowns, comparison tools for benchmarking against similar films, and predictive analytics that forecast potential returns based on current performance trends. All data is secured and verified through blockchain technology, ensuring accuracy and preventing manipulation.\n\nEarly beta testers have responded positively to the new tools. "As someone who has invested in multiple films through the platform, having this level of insight into performance metrics is game-changing," said Maria Rodriguez, a FilmChain investor since 2022. "I can now see exactly how my investments are performing across different markets and platforms."\n\nThe analytics dashboard will be available to all FilmChain users starting next month, with premium features available to those who stake FILM tokens in the platform.',
-      image: 'https://i.ibb.co/RT0vfKzb/The-Last-Sunset.jpg',
-      category: 'platform',
-      date: 'May 10, 2024',
-      author: 'Alex Chen',
-      source: 'Blockchain Technology Review'
+      title: "New Analytics Dashboard Launches for Filmmakers",
+      image: "https://placehold.co/800x400/00796b/ffffff?text=Analytics+Dashboard",
+      summary: "FilmChain introduces advanced real-time analytics for filmmakers to track performance across platforms.",
+      date: "March 10, 2024",
+      author: "Thomas Chen",
+      source: "Tech & Cinema",
+      category: "platform-update",
+      content: "FilmChain has launched a comprehensive new analytics dashboard that provides filmmakers with unprecedented insights into their films' performance across multiple distribution channels.\n\nThe new BlockOffice Analytics suite offers real-time data on viewership, revenue, audience demographics, and engagement metrics, all secured and verified through blockchain technology.\n\n\"We've designed this dashboard to empower filmmakers with the kind of detailed analytics that were previously only available to major studios and distributors,\" explained FilmChain CTO Maria Rodriguez. \"Now, independent filmmakers can make data-driven decisions about marketing, distribution strategies, and future projects.\"\n\nThe dashboard includes features such as geographic heat maps of viewership, time-of-day engagement patterns, and correlation analyses between marketing activities and ticket sales or streaming numbers. All data is immutably recorded on the blockchain, ensuring accuracy and preventing manipulation."
     }
   ];
 
-  // Filter news based on selected category
-  const filteredNews = newsCategory === 'all' 
-    ? newsItems 
-    : newsItems.filter(item => item.category === newsCategory);
+  // Filter films based on search term
+  const filteredFilms = films.filter(film => 
+    film.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    film.director.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
+  // Filter news based on search term
+  const filteredNews = news.filter(item => 
+    item.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    item.summary.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  // Handle film card click
   const handleFilmClick = (film) => {
     setSelectedFilm(film);
     setShowDetailModal(true);
   };
 
-  const handleNewsClick = (news) => {
-    setSelectedNews(news);
+  // Handle news card click
+  const handleNewsClick = (newsItem) => {
+    setSelectedNews(newsItem);
     setShowNewsModal(true);
   };
 
-  const formatCurrency = (value) => {
-    return value.startsWith('$') ? value : `$${value}`;
-  };
-
-  const formatPercentage = (value) => {
-    return value.endsWith('%') ? value : `${value}%`;
+  // Format date helper function
+  const formatDate = (dateString) => {
+    const options = { year: 'numeric', month: 'long', day: 'numeric' };
+    return new Date(dateString).toLocaleDateString(undefined, options);
   };
 
   return (
     <div className="blockoffice-container">
       <div className="section-header">
-        <h2 className="section-title">Block Office</h2>
-        <p className="section-subtitle">Real-time box office data, analytics, and industry news powered by blockchain technology</p>
-      </div>
-      
-      {/* Statistics Section */}
-      <div className="stats-grid">
-        {stats.map((stat, index) => (
-          <div className="stat-card" key={index}>
-            <div className="stat-icon">
-              <i className={`fas ${stat.icon}`}></i>
-            </div>
-            <div className="stat-value">{stat.value}</div>
-            <div className="stat-label">{stat.label}</div>
-            <div className={`stat-trend ${stat.trend}`}>
-              <i className={`fas fa-arrow-${stat.trend}`}></i>
-              <span>{stat.trendValue}</span>
-            </div>
-          </div>
-        ))}
+        <h2 className="section-title">BlockOffice</h2>
+        <p className="section-subtitle">Real-time box office analytics and industry insights powered by blockchain</p>
       </div>
 
-      {/* Revenue Chart Section */}
-      <div className="chart-container">
-        <div className="chart-header">
-          <h3>Box Office Revenue</h3>
-          <div className="chart-filters">
-            <button 
-              className={`chart-filter-btn ${timeFilter === 'week' ? 'active' : ''}`}
-              onClick={() => setTimeFilter('week')}
-            >
-              Week
-            </button>
-            <button 
-              className={`chart-filter-btn ${timeFilter === 'month' ? 'active' : ''}`}
-              onClick={() => setTimeFilter('month')}
-            >
-              Month
-            </button>
-            <button 
-              className={`chart-filter-btn ${timeFilter === 'year' ? 'active' : ''}`}
-              onClick={() => setTimeFilter('year')}
-            >
-              Year
-            </button>
-          </div>
+      <div className="tabs-navigation">
+        <button 
+          className={`tab-button ${activeTab === 'analytics' ? 'active' : ''}`}
+          onClick={() => setActiveTab('analytics')}
+        >
+          <i className="fas fa-chart-line"></i>
+          Box Office Analytics
+        </button>
+        <button 
+          className={`tab-button ${activeTab === 'films' ? 'active' : ''}`}
+          onClick={() => setActiveTab('films')}
+        >
+          <i className="fas fa-film"></i>
+          Current Films
+        </button>
+        <button 
+          className={`tab-button ${activeTab === 'news' ? 'active' : ''}`}
+          onClick={() => setActiveTab('news')}
+        >
+          <i className="fas fa-newspaper"></i>
+          Industry News
+        </button>
+      </div>
+
+      <div className="search-filter-bar">
+        <div className="search-container">
+          <i className="fas fa-search search-icon"></i>
+          <input 
+            type="text" 
+            className="search-input" 
+            placeholder={`Search ${activeTab === 'news' ? 'news' : 'films'}...`}
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
         </div>
         
-        {account ? (
-          <div className="chart-content">
-            <div className="chart-placeholder">
-              <div className="chart-bars">
-                {selectedFilm ? 
-                  selectedFilm.weeklyRevenue.map((value, index) => (
-                    <div 
-                      key={index} 
-                      className="chart-bar" 
-                      style={{ height: `${(value / Math.max(...selectedFilm.weeklyRevenue)) * 100}%` }}
-                    >
-                      <div className="chart-bar-tooltip">${value}M</div>
-                    </div>
-                  )) : 
-                  topFilms[0].weeklyRevenue.map((value, index) => (
-                    <div 
-                      key={index} 
-                      className="chart-bar" 
-                      style={{ height: `${(value / Math.max(...topFilms[0].weeklyRevenue)) * 100}%` }}
-                    >
-                      <div className="chart-bar-tooltip">${value}M</div>
-                    </div>
-                  ))
-                }
-              </div>
-              <div className="chart-labels">
-                <span>Mon</span>
-                <span>Tue</span>
-                <span>Wed</span>
-                <span>Thu</span>
-                <span>Fri</span>
-                <span>Sat</span>
-                <span>Sun</span>
-              </div>
-            </div>
-            <div className="chart-legend">
-              <div className="legend-item">
-                <div className="legend-color" style={{ backgroundColor: 'var(--primary-color)' }}></div>
-                <span>{selectedFilm ? selectedFilm.title : topFilms[0].title}</span>
-              </div>
-              <p className="chart-note">Click on any film below to view its revenue chart</p>
-            </div>
-          </div>
-        ) : (
-          <div className="chart-placeholder empty">
-            <div className="connect-prompt">
-              <i className="fas fa-lock"></i>
-              <p>Connect your wallet to view detailed analytics</p>
-              <button className="btn btn-primary" onClick={connectWallet}>Connect Wallet</button>
-            </div>
+        {activeTab === 'analytics' && (
+          <div className="filter-controls">
+            <select 
+              className="filter-select" 
+              value={timeRange}
+              onChange={(e) => setTimeRange(e.target.value)}
+            >
+              <option value="week">Past Week</option>
+              <option value="month">Past Month</option>
+              <option value="quarter">Past Quarter</option>
+              <option value="year">Past Year</option>
+            </select>
+            <select 
+              className="filter-select" 
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value)}
+            >
+              <option value="revenue">Revenue</option>
+              <option value="tickets">Ticket Sales</option>
+              <option value="growth">Growth Rate</option>
+            </select>
           </div>
         )}
       </div>
 
-      {/* Top Films Section */}
-      <div className="top-films-section">
-        <h3 className="section-subtitle">Top Performing Films</h3>
-        <div className="responsive-table-container">
-          <table className="films-table">
-            <thead>
-              <tr>
-                <th>Film</th>
-                <th>Revenue</th>
-                <th>Trend</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {topFilms.map(film => (
-                <tr key={film.id} onClick={() => handleFilmClick(film)}>
-                  <td>
-                    <div className="film-title">
-                      <img src={film.poster} alt={film.title} className="film-poster" />
-                      <div>
-                        <div className="film-name">{film.title}</div>
-                        <div className="film-director">Dir: {film.director}</div>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="revenue-value">{film.revenue}</td>
-                  <td>
-                    <span className={`trending-badge ${film.trend}`}>
-                      <i className={`fas fa-arrow-${film.trend}`}></i>
-                      {film.trendValue}
-                    </span>
-                  </td>
-                  <td>
-                    <button 
-                      className="btn btn-sm btn-outline"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleFilmClick(film);
-                      }}
-                    >
-                      Details
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      {/* News Section */}
-      <div className="news-section">
-        <div className="section-header">
-          <h3 className="section-subtitle">Industry News</h3>
-          <div className="tabs">
-            <button 
-              className={`tab-button ${newsCategory === 'all' ? 'active' : ''}`}
-              onClick={() => setNewsCategory('all')}
-            >
-              All News
-            </button>
-            <button 
-              className={`tab-button ${newsCategory === 'box-office' ? 'active' : ''}`}
-              onClick={() => setNewsCategory('box-office')}
-            >
-              Box Office
-            </button>
-            <button 
-              className={`tab-button ${newsCategory === 'distribution' ? 'active' : ''}`}
-              onClick={() => setNewsCategory('distribution')}
-            >
-              Distribution
-            </button>
-            <button 
-              className={`tab-button ${newsCategory === 'platform' ? 'active' : ''}`}
-              onClick={() => setNewsCategory('platform')}
-            >
-              Platform Updates
-            </button>
-          </div>
-        </div>
-        
-        <div className="grid">
-          {filteredNews.map(news => (
-            <div 
-              className="card news-card" 
-              key={news.id}
-              onClick={() => handleNewsClick(news)}
-            >
-              <div className="card-image">
-                <img src={news.image} alt={news.title} />
-                <div className="card-badge">
-                  {news.category === 'box-office' ? 'Box Office' : 
-                   news.category === 'distribution' ? 'Distribution' : 
-                   'Platform Update'}
+      {activeTab === 'analytics' && (
+        <div className="analytics-dashboard">
+          <div className="dashboard-grid">
+            <div className="dashboard-card summary-card">
+              <div className="card-header">
+                <h3>Box Office Summary</h3>
+                <span className="time-period">{timeRange === 'week' ? 'Past 7 Days' : timeRange === 'month' ? 'Past 30 Days' : timeRange === 'quarter' ? 'Past 90 Days' : 'Past 365 Days'}</span>
+              </div>
+              <div className="summary-stats">
+                <div className="stat-item">
+                  <span className="stat-value">$132.5M</span>
+                  <span className="stat-label">Total Revenue</span>
+                  <span className="stat-change positive">+8.3%</span>
+                </div>
+                <div className="stat-item">
+                  <span className="stat-value">1.45M</span>
+                  <span className="stat-label">Tickets Sold</span>
+                  <span className="stat-change positive">+5.7%</span>
+                </div>
+                <div className="stat-item">
+                  <span className="stat-value">$91.38</span>
+                  <span className="stat-label">Avg. Per Film</span>
+                  <span className="stat-change negative">-2.1%</span>
                 </div>
               </div>
-              <div className="card-content">
-                <h3 className="card-title">{news.title}</h3>
-                <p className="card-text">{news.excerpt}</p>
-                <div className="card-footer">
-                  <span className="news-date">
-                    <i className="far fa-calendar-alt"></i> {news.date}
+            </div>
+
+            <div className="dashboard-card chart-card">
+              <div className="card-header">
+                <h3>Revenue Trends</h3>
+                <div className="chart-legend">
+                  <span className="legend-item"><span className="legend-color" style={{backgroundColor: '#6a11cb'}}></span>This Period</span>
+                  <span className="legend-item"><span className="legend-color" style={{backgroundColor: '#cccccc'}}></span>Previous Period</span>
+                </div>
+              </div>
+              <div className="chart-placeholder">
+                <div className="chart-bars">
+                  {[65, 59, 80, 81, 56, 55, 40].map((value, index) => (
+                    <div key={index} className="chart-bar-container">
+                      <div className="chart-bar" style={{ height: `${value}%` }}></div>
+                      <span className="bar-label">{['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'][index]}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            <div className="dashboard-card top-performers-card">
+              <div className="card-header">
+                <h3>Top Performers</h3>
+                <select className="card-filter">
+                  <option>By Revenue</option>
+                  <option>By Growth</option>
+                </select>
+              </div>
+              <ul className="top-performers-list">
+                {films.map((film, index) => (
+                  <li key={index} className="performer-item">
+                    <span className="rank">{index + 1}</span>
+                    <div className="film-info">
+                      <span className="film-title">{film.title}</span>
+                      <span className="film-director">{film.director}</span>
+                    </div>
+                    <div className="performance-data">
+                      <span className="revenue">{film.revenue}</span>
+                      <span className={`trend ${film.trend}`}>
+                        <i className={`fas fa-arrow-${film.trend}`}></i>
+                        {film.trendValue}
+                      </span>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            <div className="dashboard-card genre-performance-card">
+              <div className="card-header">
+                <h3>Genre Performance</h3>
+              </div>
+              <div className="donut-chart-placeholder">
+                <div className="donut-chart">
+                  <div className="donut-segment" style={{ '--percentage': '35%', '--color': '#6a11cb' }}></div>
+                  <div className="donut-segment" style={{ '--percentage': '25%', '--color': '#9c27b0' }}></div>
+                  <div className="donut-segment" style={{ '--percentage': '20%', '--color': '#e91e63' }}></div>
+                  <div className="donut-segment" style={{ '--percentage': '15%', '--color': '#ff5722' }}></div>
+                  <div className="donut-segment" style={{ '--percentage': '5%', '--color': '#ffc107' }}></div>
+                </div>
+                <div className="donut-legend">
+                  <div className="legend-item"><span className="legend-color" style={{backgroundColor: '#6a11cb'}}></span>Action/Adventure (35%)</div>
+                  <div className="legend-item"><span className="legend-color" style={{backgroundColor: '#9c27b0'}}></span>Sci-Fi (25%)</div>
+                  <div className="legend-item"><span className="legend-color" style={{backgroundColor: '#e91e63'}}></span>Drama (20%)</div>
+                  <div className="legend-item"><span className="legend-color" style={{backgroundColor: '#ff5722'}}></span>Comedy (15%)</div>
+                  <div className="legend-item"><span className="legend-color" style={{backgroundColor: '#ffc107'}}></span>Other (5%)</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {activeTab === 'films' && (
+        <div className="films-grid">
+          {filteredFilms.map(film => (
+            <div key={film.id} className="film-card" onClick={() => handleFilmClick(film)}>
+              <div className="film-poster">
+                <img src={film.poster} alt={film.title} />
+                <div className="film-rating">
+                  <i className="fas fa-star"></i>
+                  <span>{film.rating}</span>
+                </div>
+              </div>
+              <div className="film-info">
+                <h3 className="film-title">{film.title}</h3>
+                <p className="film-director">Dir. {film.director}</p>
+                <p className="film-release-date">{formatDate(film.releaseDate)}</p>
+                <div className="film-performance">
+                  <span className="film-revenue">{film.revenue}</span>
+                  <span className={`film-trend ${film.trend}`}>
+                    <i className={`fas fa-arrow-${film.trend}`}></i>
+                    {film.trendValue}
                   </span>
-                  <button className="btn-link">Read More</button>
                 </div>
               </div>
             </div>
           ))}
         </div>
-      </div>
+      )}
+
+      {activeTab === 'news' && (
+        <div className="news-grid">
+          {filteredNews.map(item => (
+            <div key={item.id} className="news-card" onClick={() => handleNewsClick(item)}>
+              <div className="news-image">
+                <img src={item.image} alt={item.title} />
+                <span className={`news-category ${item.category}`}>
+                  {item.category === 'box-office' ? 'Box Office' : 
+                   item.category === 'distribution' ? 'Distribution' : 
+                   'Platform Update'}
+                </span>
+              </div>
+              <div className="news-content">
+                <h3 className="news-title">{item.title}</h3>
+                <p className="news-summary">{item.summary}</p>
+                <div className="news-meta">
+                  <span className="news-date">{item.date}</span>
+                  <span className="news-source">{item.source}</span>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
 
       {/* Film Detail Modal */}
       {showDetailModal && selectedFilm && (
@@ -562,12 +536,6 @@ const BlockOfficeSection = () => {
       {walletError && <p className="form-error">{walletError}</p>}
     </div>
   );
-};
-
-// Helper function to format dates
-const formatDate = (dateString) => {
-  const options = { year: 'numeric', month: 'long', day: 'numeric' };
-  return new Date(dateString).toLocaleDateString(undefined, options);
 };
 
 export default BlockOfficeSection;
