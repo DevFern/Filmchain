@@ -1,151 +1,34 @@
-/* Accessibility Improvements */
-button:focus,
-input:focus,
-select:focus,
-textarea:focus {
-  outline: 2px solid #6a11cb;
-  outline-offset: 2px;
+/* Logo Styling */
+.App-logo {
+  height: 60px; /* Adjust the height as needed */
+  width: auto; /* Maintain aspect ratio */
+  display: block;
+  margin: 0 auto; /* Centre the logo */
+  object-fit: contain; /* Ensure the logo fits within its container */
 }
 
-/* Wallet Connection Prompt */
-.wallet-connection-prompt {
+/* Navbar Styling */
+.navbar {
   display: flex;
-  justify-content: center;
   align-items: center;
-  min-height: 100vh;
-  background-color: #f5f5f5;
-  padding: 20px;
-}
-
-.wallet-connection-prompt-content {
-  background-color: white;
-  border-radius: 10px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-  padding: 40px;
-  max-width: 500px;
-  text-align: center;
-}
-
-.wallet-connection-prompt-content h2 {
-  color: #333;
-  margin-bottom: 20px;
-}
-
-.wallet-connection-prompt-content p {
-  color: #666;
-  margin-bottom: 15px;
-  line-height: 1.5;
-}
-
-.connect-wallet-btn {
-  display: inline-block;
-  background-color: #6a11cb;
-  color: white;
-  padding: 12px 24px;
-  border-radius: 5px;
-  text-decoration: none;
-  font-weight: bold;
-  margin: 20px 0;
-  transition: background-color 0.3s;
-}
-
-.connect-wallet-btn:hover {
-  background-color: #2575fc;
-}
-
-/* Transaction Status Indicator */
-.transaction-status {
-  position: fixed;
-  bottom: 20px;
-  right: 20px;
-  background-color: #fff;
-  border: 1px solid #ddd;
-  border-radius: 8px;
-  padding: 1rem;
+  justify-content: space-between;
+  padding: 1rem 2rem;
+  background-color: #f8f9fa; /* Light background for contrast */
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.nav-links {
   display: flex;
-  align-items: center;
-  gap: 1rem;
-  z-index: 1000;
+  gap: 1.5rem;
 }
 
-.transaction-status.loading {
-  border-color: #f39c12;
-}
-
-.transaction-status.success {
-  border-color: #27ae60;
-}
-
-.transaction-status.error {
-  border-color: #e74c3c;
-}
-
-.transaction-status-icon {
-  font-size: 1.5rem;
-}
-
-.transaction-status-message {
-  font-size: 0.9rem;
+.nav-link {
+  text-decoration: none;
   color: #333;
+  font-weight: 500;
+  transition: color 0.3s ease;
 }
 
-/* Responsive Improvements */
-@media (max-width: 768px) {
-  .navbar {
-    flex-direction: column;
-    padding: 1rem;
-  }
-
-  .nav-links {
-    margin-top: 1rem;
-    flex-wrap: wrap;
-    justify-content: center;
-  }
-
-  .section-header h2 {
-    font-size: 1.8rem;
-  }
-
-  .projects-grid,
-  .proposals-grid,
-  .jobs-grid,
-  .news-grid,
-  .nft-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .stats-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-
-  .films-table {
-    display: block;
-    overflow-x: auto;
-  }
-}
-
-@media (max-width: 480px) {
-  .stats-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .category-tabs,
-  .tab-navigation {
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  .category-tab,
-  .tab-btn {
-    text-align: center;
-  }
-
-  .filters-section {
-    flex-direction: column;
-  }
-
-  .modal-content {
-    padding: 1rem;
-  }
+.nav-link:hover {
+  color: #6a11cb; /* Add hover effect */
 }
