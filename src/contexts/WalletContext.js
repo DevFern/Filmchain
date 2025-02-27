@@ -79,12 +79,12 @@ export const WalletProvider = ({ children }) => {
     network,
   };
 
-  return (
-    <Wallet.Provider value={value}>
-      {children}
-    </Wallet.Provider>
-  );
-};
+return (
+  <WalletContext.Provider value={value}>
+    {children}
+  </WalletContext.Provider>
+);
+
 
 // Custom hook to use the wallet context
 export const useWallet = () => {
