@@ -18,5 +18,31 @@
   <body>
     <noscript>You need to enable JavaScript to run this app.</noscript>
     <div id="root"></div>
-  </body>
+ <script>
+  window.onerror = function(message, source, lineno, colno, error) {
+    // Create an error message element
+    var errorDiv = document.createElement('div');
+    errorDiv.style.backgroundColor = '#ffebee';
+    errorDiv.style.color = '#b71c1c';
+    errorDiv.style.padding = '20px';
+    errorDiv.style.margin = '20px';
+    errorDiv.style.border = '1px solid #f44336';
+    errorDiv.style.borderRadius = '4px';
+    
+    // Add error details
+    errorDiv.innerHTML = '<h2>JavaScript Error Detected</h2>' +
+      '<p><strong>Message:</strong> ' + message + '</p>' +
+      '<p><strong>Source:</strong> ' + source + '</p>' +
+      '<p><strong>Line:</strong> ' + lineno + ', <strong>Column:</strong> ' + colno + '</p>' +
+      (error && error.stack ? '<pre>' + error.stack + '</pre>' : '');
+    
+    // Add to the body
+    document.body.appendChild(errorDiv);
+    
+    // Log to console as well
+    console.error('Caught by window.onerror:', message, source, lineno, colno, error);
+    
+    return true; // Prevents the default error handling
+  };
+</script> </body>
 </html>
