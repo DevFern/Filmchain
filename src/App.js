@@ -1,4 +1,20 @@
-import React, { useState } from 'react';
+// Find this line:
+const [notifications, setNotifications] = useState([]);
+
+// Replace with:
+const [notifications] = useState([]);
+
+// Find this line:
+const [userProfile, setUserProfile] = useState(null);
+
+// Replace with:
+const [userProfile] = useState(null);
+
+// Find this line:
+const { account, chainId, connectWallet, disconnectWallet } = useWallet();
+
+// Replace with:
+const { account, connectWallet, disconnectWallet } = useWallet();import React, { useState } from 'react';
 import { WalletProvider, useWallet } from './contexts/WalletContext';
 import './App.css';
 
