@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useWallet } from './contexts/WalletContext';
 import NFTMarketSection from './components/NFTMarketSection';
 import IndieFundSection from './components/IndieFundSection';
@@ -8,8 +8,6 @@ import CommunityVoiceSection from './components/CommunityVoiceSection';
 import './App.css';
 
 function App() {
-  console.log("App component rendering");
-
   const [activeSection, setActiveSection] = useState('nftmarket');
   const [notifications] = useState([]);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
@@ -17,8 +15,6 @@ function App() {
   const [menuOpen, setMenuOpen] = useState(false);
 
   const { account, connectWallet, disconnectWallet, isMetaMaskInstalled } = useWallet();
-
-  console.log("Wallet context values:", { account, isMetaMaskInstalled });
 
   const renderSection = () => {
     switch (activeSection) {
@@ -56,6 +52,23 @@ function App() {
     setMenuOpen(false);
   };
 
+  // Close dropdowns when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (showProfileMenu && !event.target.closest('.profile-container')) {
+        setShowProfileMenu(false);
+      }
+      if (showNotifications && !event.target.closest('.notifications-container')) {
+        setShowNotifications(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showProfileMenu, showNotifications]);
+
   // MetaMask installation prompt
   if (!isMetaMaskInstalled) {
     return (
@@ -92,56 +105,100 @@ function App() {
             <h1>FilmChain</h1>
           </div>
           
-          <button className="mobile-menu-btn" onClick={toggleMenu}>
+          <button className="mobile-menu-btn" onClick={toggleMenu} aria-label="Toggle menu">
             <i className={`fas ${menuOpen ? 'fa-times' : 'fa-bars'}`}></i>
           </button>
           
           <nav className={`main-nav ${menuOpen ? 'open' : ''}`}>
-            <ul>
-              {['nftmarket', 'indiefund', 'hyreblock', 'blockoffice', 'communityvoice'].map((section) => (
-                <li key={section} className={activeSection === section ? 'active' : ''}>
-                  <button onClick={() => handleSectionChange(section)}>
-                    {section.charAt(0).toUpperCase() + section.slice(1).replace(/([A-Z])/g, ' $1')}
-                  </button>
-                </li>
-              ))}
+            <ul className="nav-list">
+              <li className={`nav-item ${activeSection === 'nftmarket' ? 'active' : ''}`}>
+                <button 
+                  className={`nav-button ${activeSection === 'nftmarket' ? 'active' : ''}`}
+                  onClick={() => handleSectionChange('nftmarket')}
+                >
+                  <i className="fas fa-store"></i>
+                  <span>NFT Market</span>
+                </button>
+              </li>
+              <li className={`nav-item ${activeSection === 'indiefund' ? 'active' : ''}`}>
+                <button 
+                  className={`nav-button ${activeSection === 'indiefund' ? 'active' : ''}`}
+                  onClick={() => handleSectionChange('indiefund')}
+                >
+                  <i className="fas fa-film"></i>
+                  <span>Indie Fund</span>
+                </button>
+              </li>
+              <li className={`nav-item ${activeSection === 'hyreblock' ? 'active' : ''}`}>
+                <button 
+                  className={`nav-button ${activeSection === 'hyreblock' ? 'active' : ''}`}
+                  onClick={() => handleSectionChange('hyreblock')}
+                >
+                  <i className="fas fa-briefcase"></i>
+                  <span>Hyre Block</span>
+                </button>
+              </li>
+              <li className={`nav-item ${activeSection === 'blockoffice' ? 'active' : ''}`}>
+                <button 
+                  className={`nav-button ${activeSection === 'blockoffice' ? 'active' : ''}`}
+                  onClick={() => handleSectionChange('blockoffice')}
+                >
+                  <i className="fas fa-chart-line"></i>
+                  <span>Block Office</span>
+                </button>
+              </li>
+              <li className={`nav-item ${activeSection === 'communityvoice' ? 'active' : ''}`}>
+                <button 
+                  className={`nav-button ${activeSection === 'communityvoice' ? 'active' : ''}`}
+                  onClick={() => handleSectionChange('communityvoice')}
+                >
+                  <i className="fas fa-comments"></i>
+                  <span>Community Voice</span>
+                </button>
+              </li>
             </ul>
           </nav>
           
           <div className="header-actions">
             {/* Notifications */}
             <div className="notifications-container">
-              <button className="notifications-btn" onClick={toggleNotifications}>
+              <button className="action-button notifications-btn" onClick={toggleNotifications} aria-label="Notifications">
                 <i className="fas fa-bell"></i>
                 {notifications.length > 0 && (
                   <span className="notification-badge">{notifications.length}</span>
                 )}
               </button>
               
-              {showNotifications && (
-                <div className="notifications-dropdown">
-                  <h3>Notifications</h3>
+              <div className={`dropdown ${showNotifications ? 'active' : ''}`}>
+                <div className="dropdown-header">
+                  <h3 className="dropdown-title">Notifications</h3>
+                </div>
+                <div className="dropdown-body">
                   {notifications.length === 0 ? (
-                    <p className="no-notifications">No new notifications</p>
+                    <div className="dropdown-empty">
+                      <i className="fas fa-bell-slash"></i>
+                      <p>No new notifications</p>
+                    </div>
                   ) : (
-                    <ul className="notifications-list">
-                      {notifications.map((notification, index) => (
-                        <li key={index} className="notification-item">
-                          <div className="notification-content">
-                            <p>{notification.message}</p>
-                            <span className="notification-time">{notification.time}</span>
-                          </div>
-                        </li>
-                      ))}
-                    </ul>
+                    notifications.map((notification, index) => (
+                      <div key={index} className="dropdown-item">
+                        <i className="fas fa-info-circle"></i>
+                        <div>
+                          <p>{notification.message}</p>
+                          <span className="notification-time">{notification.time}</span>
+                        </div>
+                      </div>
+                    ))
                   )}
                 </div>
-              )}
+              </div>
             </div>
+            
             {/* Wallet Connection */}
             {!account ? (
               <button className="connect-wallet-btn" onClick={connectWallet}>
-                Connect Wallet
+                <i className="fas fa-wallet"></i>
+                <span>Connect Wallet</span>
               </button>
             ) : (
               <div className="profile-container">
@@ -149,24 +206,37 @@ function App() {
                   <span className="wallet-address">
                     {account.substring(0, 6)}...{account.substring(account.length - 4)}
                   </span>
-                  <i className="fas fa-user-circle"></i>
+                  <i className="fas fa-user-circle profile-icon"></i>
                 </button>
                 
-                {showProfileMenu && (
-                  <div className="profile-dropdown">
-                    <div className="profile-header">
-                      <h3>My Wallet</h3>
-                      <p className="wallet-address-full">{account}</p>
-                    </div>
-                    <ul className="profile-menu">
-                      <li><button>My Profile</button></li>
-                      <li><button>My NFTs</button></li>
-                      <li><button>My Investments</button></li>
-                      <li><button>Settings</button></li>
-                      <li><button className="disconnect-btn" onClick={disconnectWallet}>Disconnect</button></li>
-                    </ul>
+                <div className={`dropdown ${showProfileMenu ? 'active' : ''}`}>
+                  <div className="dropdown-header">
+                    <h3 className="dropdown-title">My Wallet</h3>
+                    <p className="dropdown-subtitle">{account}</p>
                   </div>
-                )}
+                  <div className="dropdown-body">
+                    <div className="dropdown-item">
+                      <i className="fas fa-user"></i>
+                      <span>My Profile</span>
+                    </div>
+                    <div className="dropdown-item">
+                      <i className="fas fa-images"></i>
+                      <span>My NFTs</span>
+                    </div>
+                    <div className="dropdown-item">
+                      <i className="fas fa-chart-pie"></i>
+                      <span>My Investments</span>
+                    </div>
+                    <div className="dropdown-item">
+                      <i className="fas fa-cog"></i>
+                      <span>Settings</span>
+                    </div>
+                    <div className="dropdown-item danger" onClick={disconnectWallet}>
+                      <i className="fas fa-sign-out-alt"></i>
+                      <span>Disconnect</span>
+                    </div>
+                  </div>
+                </div>
               </div>
             )}
           </div>
@@ -190,22 +260,26 @@ function App() {
             <p>FilmChain © 2023</p>
           </div>
           <div className="footer-links">
-            <a href="/about">About</a>
-            <a href="/terms">Terms</a>
-            <a href="/privacy">Privacy</a>
-            <a href="/contact">Contact</a>
+            <a href="/about" className="footer-link">About</a>
+            <a href="/terms" className="footer-link">Terms</a>
+            <a href="/privacy" className="footer-link">Privacy</a>
+            <a href="/contact" className="footer-link">Contact</a>
           </div>
           <div className="social-links">
-            <a href="https://twitter.com" target="_blank" rel="noopener noreferrer">
+            <a href="https://twitter.com" target="_blank" rel="noopener noreferrer" className="social-link" aria-label="Twitter">
               <i className="fab fa-twitter"></i>
             </a>
-            <a href="https://discord.com" target="_blank" rel="noopener noreferrer">
+            <a href="https://discord.com" target="_blank" rel="noopener noreferrer" className="social-link" aria-label="Discord">
               <i className="fab fa-discord"></i>
             </a>
-            <a href="https://github.com" target="_blank" rel="noopener noreferrer">
+            <a href="https://github.com" target="_blank" rel="noopener noreferrer" className="social-link" aria-label="GitHub">
               <i className="fab fa-github"></i>
             </a>
           </div>
+        </div>
+        <div className="footer-bottom">
+          <p>Powered by Blockchain Technology</p>
+          <p>All rights reserved</p>
         </div>
       </footer>
     </div>
