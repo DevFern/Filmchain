@@ -1,6 +1,6 @@
-// src/components/HyreBlockSection.js
 import React, { useState, useEffect } from 'react';
 import { useWallet } from '../contexts/WalletContext';
+import { motion, AnimatePresence } from 'framer-motion';
 import './HyreBlock.css';
 
 const HyreBlockSection = () => {
@@ -209,9 +209,32 @@ const HyreBlockSection = () => {
     return true;
   });
 
+  // Animation variants for framer-motion
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.1
+      }
+    }
+  };
+
+  const itemVariants = {
+    hidden: { y: 20, opacity: 0 },
+    visible: {
+      y: 0,
+      opacity: 1,
+      transition: { type: "spring", stiffness: 100 }
+    }
+  };
+
   // Job Card Component
   const JobCard = ({ job }) => (
-    <div className={`job-card ${viewMode === 'list' ? 'list-view' : ''}`}>
+    <motion.div 
+      className={`job-card ${viewMode === 'list' ? 'list-view' : ''}`}
+      variants={itemVariants}
+    >
       <div className="job-card-header">
         <div className="company-logo">
           <img src={job.logo} alt={job.company} />
@@ -260,12 +283,15 @@ const HyreBlockSection = () => {
 
         <button className="apply-btn">Apply Now</button>
       </div>
-    </div>
+    </motion.div>
   );
 
   // Talent Card Component
   const TalentCard = ({ talent }) => (
-    <div className={`talent-card ${viewMode === 'list' ? 'list-view' : ''}`}>
+    <motion.div 
+      className={`talent-card ${viewMode === 'list' ? 'list-view' : ''}`}
+      variants={itemVariants}
+    >
       <div className="talent-card-header">
         <div className="talent-avatar">
           <img src={talent.image} alt={talent.name} />
@@ -309,7 +335,7 @@ const HyreBlockSection = () => {
 
         <button className="contact-btn">View Profile</button>
       </div>
-    </div>
+    </motion.div>
   );
 
   return (
@@ -429,7 +455,12 @@ const HyreBlockSection = () => {
 
       {/* Jobs Tab */}
       {activeTab === 'jobs' && (
-        <div className={`jobs-container ${viewMode}`}>
+        <motion.div 
+          className={`jobs-container ${viewMode}`}
+          variants={containerVariants}
+          initial="hidden"
+          animate="visible"
+        >
           {filteredJobs.length > 0 ? (
             filteredJobs.map(job => (
               <JobCard key={job.id} job={job} />
@@ -441,12 +472,17 @@ const HyreBlockSection = () => {
               <p>Try adjusting your search filters or check back later for new opportunities.</p>
             </div>
           )}
-        </div>
+        </motion.div>
       )}
 
       {/* Talent Tab */}
       {activeTab === 'talent' && (
-        <div className={`talents-container ${viewMode}`}>
+        <motion.div 
+          className={`talents-container ${viewMode}`}
+          variants={containerVariants}
+          initial="hidden"
+          animate="visible"
+        >
           {filteredTalents.length > 0 ? (
             filteredTalents.map(talent => (
               <TalentCard key={talent.id} talent={talent} />
@@ -458,7 +494,7 @@ const HyreBlockSection = () => {
               <p>Try adjusting your search filters or check back later for new professionals.</p>
             </div>
           )}
-        </div>
+        </motion.div>
       )}
 
       {/* Saved Tab */}
@@ -479,47 +515,56 @@ const HyreBlockSection = () => {
             </button>
           </div>
 
-          <div className={`saved-items-container ${viewMode}`}>
-            {!selectedTalent ? (
-              // Saved Jobs
-              savedJobs.length > 0 ? (
-                jobs.filter(job => savedJobs.includes(job.id)).map(job => (
-                  <JobCard key={job.id} job={job} />
-                ))
+          <AnimatePresence mode="wait">
+            <motion.div 
+              key={selectedTalent ? 'talents' : 'jobs'}
+              className={`saved-items-container ${viewMode}`}
+              variants={containerVariants}
+              initial="hidden"
+              animate="visible"
+              exit={{ opacity: 0 }}
+            >
+              {!selectedTalent ? (
+                // Saved Jobs
+                savedJobs.length > 0 ? (
+                  jobs.filter(job => savedJobs.includes(job.id)).map(job => (
+                    <JobCard key={job.id} job={job} />
+                  ))
+                ) : (
+                  <div className="empty-state">
+                    <i className="far fa-heart"></i>
+                    <h3>No saved jobs</h3>
+                    <p>Jobs you save will appear here for easy access.</p>
+                    <button
+                      className="btn-primary"
+                      onClick={() => setActiveTab('jobs')}
+                    >
+                      Browse Jobs
+                    </button>
+                  </div>
+                )
               ) : (
-                <div className="empty-state">
-                  <i className="far fa-heart"></i>
-                  <h3>No saved jobs</h3>
-                  <p>Jobs you save will appear here for easy access.</p>
-                  <button
-                    className="btn-primary"
-                    onClick={() => setActiveTab('jobs')}
-                  >
-                    Browse Jobs
-                  </button>
-                </div>
-              )
-            ) : (
-              // Saved Talents
-              savedTalents.length > 0 ? (
-                talents.filter(talent => savedTalents.includes(talent.id)).map(talent => (
-                  <TalentCard key={talent.id} talent={talent} />
-                ))
-              ) : (
-                <div className="empty-state">
-                  <i className="far fa-heart"></i>
-                  <h3>No saved talents</h3>
-                  <p>Talents you save will appear here for easy access.</p>
-                  <button
-                    className="btn-primary"
-                    onClick={() => setActiveTab('talent')}
-                  >
-                    Browse Talents
-                  </button>
-                </div>
-              )
-            )}
-          </div>
+                // Saved Talents
+                savedTalents.length > 0 ? (
+                  talents.filter(talent => savedTalents.includes(talent.id)).map(talent => (
+                    <TalentCard key={talent.id} talent={talent} />
+                  ))
+                ) : (
+                  <div className="empty-state">
+                    <i className="far fa-heart"></i>
+                    <h3>No saved talents</h3>
+                    <p>Talents you save will appear here for easy access.</p>
+                    <button
+                      className="btn-primary"
+                      onClick={() => setActiveTab('talent')}
+                    >
+                      Browse Talents
+                    </button>
+                  </div>
+                )
+              )}
+            </motion.div>
+          </AnimatePresence>
         </div>
       )}
 
@@ -548,12 +593,19 @@ const HyreBlockSection = () => {
       )}
 
       {/* Notification */}
-      {showNotification && (
-        <div className={`notification ${notificationType}`}>
-          <i className={`fas ${notificationType === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'}`}></i>
-          <span>{notificationMessage}</span>
-        </div>
-      )}
+      <AnimatePresence>
+        {showNotification && (
+          <motion.div 
+            className={`notification ${notificationType}`}
+            initial={{ x: 100, opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            exit={{ x: 100, opacity: 0 }}
+          >
+            <i className={`fas ${notificationType === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'}`}></i>
+            <span>{notificationMessage}</span>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };
