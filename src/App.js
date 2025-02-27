@@ -14,6 +14,7 @@ function App() {
   const [notifications] = useState([]);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
 
   const { account, connectWallet, disconnectWallet, isMetaMaskInstalled } = useWallet();
 
@@ -46,6 +47,15 @@ function App() {
     if (showProfileMenu) setShowProfileMenu(false);
   };
 
+  const toggleMenu = () => {
+    setMenuOpen(!menuOpen);
+  };
+
+  const handleSectionChange = (section) => {
+    setActiveSection(section);
+    setMenuOpen(false);
+  };
+
   // MetaMask installation prompt
   if (!isMetaMaskInstalled) {
     return (
@@ -72,87 +82,94 @@ function App() {
     <div className="app-container">
       {/* Header */}
       <header className="app-header">
-        <div className="logo-container">
-          {/* Updated to use the external logo URL */}
-          <img 
-            src="https://i.ibb.co/dsc9RSQ6/filmchain-logo.jpg" 
-            alt="FilmChain Logo" 
-            className="logo" 
-          />
-          <h1>FilmChain</h1>
-        </div>
-        <nav className="main-nav">
-          <ul>
-            {['nftmarket', 'indiefund', 'hyreblock', 'blockoffice', 'communityvoice'].map((section) => (
-              <li key={section} className={activeSection === section ? 'active' : ''}>
-                <button onClick={() => setActiveSection(section)}>
-                  {section.charAt(0).toUpperCase() + section.slice(1).replace(/([A-Z])/g, ' $1')}
-                </button>
-              </li>
-            ))}
-          </ul>
-        </nav>
-        <div className="header-actions">
-          {/* Notifications */}
-          <div className="notifications-container">
-            <button className="notifications-btn" onClick={toggleNotifications}>
-              <i className="fas fa-bell"></i>
-              {notifications.length > 0 && (
-                <span className="notification-badge">{notifications.length}</span>
+        <div className="header-content">
+          <div className="logo-container">
+            <img 
+              src="https://i.ibb.co/dsc9RSQ6/filmchain-logo.jpg" 
+              alt="FilmChain Logo" 
+              className="logo" 
+            />
+            <h1>FilmChain</h1>
+          </div>
+          
+          <button className="mobile-menu-btn" onClick={toggleMenu}>
+            <i className={`fas ${menuOpen ? 'fa-times' : 'fa-bars'}`}></i>
+          </button>
+          
+          <nav className={`main-nav ${menuOpen ? 'open' : ''}`}>
+            <ul>
+              {['nftmarket', 'indiefund', 'hyreblock', 'blockoffice', 'communityvoice'].map((section) => (
+                <li key={section} className={activeSection === section ? 'active' : ''}>
+                  <button onClick={() => handleSectionChange(section)}>
+                    {section.charAt(0).toUpperCase() + section.slice(1).replace(/([A-Z])/g, ' $1')}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </nav>
+          
+          <div className="header-actions">
+            {/* Notifications */}
+            <div className="notifications-container">
+              <button className="notifications-btn" onClick={toggleNotifications}>
+                <i className="fas fa-bell"></i>
+                {notifications.length > 0 && (
+                  <span className="notification-badge">{notifications.length}</span>
+                )}
+              </button>
+              
+              {showNotifications && (
+                <div className="notifications-dropdown">
+                  <h3>Notifications</h3>
+                  {notifications.length === 0 ? (
+                    <p className="no-notifications">No new notifications</p>
+                  ) : (
+                    <ul className="notifications-list">
+                      {notifications.map((notification, index) => (
+                        <li key={index} className="notification-item">
+                          <div className="notification-content">
+                            <p>{notification.message}</p>
+                            <span className="notification-time">{notification.time}</span>
+                          </div>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
               )}
-            </button>
-            
-            {showNotifications && (
-              <div className="notifications-dropdown">
-                <h3>Notifications</h3>
-                {notifications.length === 0 ? (
-                  <p className="no-notifications">No new notifications</p>
-                ) : (
-                  <ul className="notifications-list">
-                    {notifications.map((notification, index) => (
-                      <li key={index} className="notification-item">
-                        <div className="notification-content">
-                          <p>{notification.message}</p>
-                          <span className="notification-time">{notification.time}</span>
-                        </div>
-                      </li>
-                    ))}
-                  </ul>
+            </div>
+            {/* Wallet Connection */}
+            {!account ? (
+              <button className="connect-wallet-btn" onClick={connectWallet}>
+                Connect Wallet
+              </button>
+            ) : (
+              <div className="profile-container">
+                <button className="profile-btn" onClick={toggleProfileMenu}>
+                  <span className="wallet-address">
+                    {account.substring(0, 6)}...{account.substring(account.length - 4)}
+                  </span>
+                  <i className="fas fa-user-circle"></i>
+                </button>
+                
+                {showProfileMenu && (
+                  <div className="profile-dropdown">
+                    <div className="profile-header">
+                      <h3>My Wallet</h3>
+                      <p className="wallet-address-full">{account}</p>
+                    </div>
+                    <ul className="profile-menu">
+                      <li><button>My Profile</button></li>
+                      <li><button>My NFTs</button></li>
+                      <li><button>My Investments</button></li>
+                      <li><button>Settings</button></li>
+                      <li><button className="disconnect-btn" onClick={disconnectWallet}>Disconnect</button></li>
+                    </ul>
+                  </div>
                 )}
               </div>
             )}
           </div>
-          {/* Wallet Connection */}
-          {!account ? (
-            <button className="connect-wallet-btn" onClick={connectWallet}>
-              Connect Wallet
-            </button>
-          ) : (
-            <div className="profile-container">
-              <button className="profile-btn" onClick={toggleProfileMenu}>
-                <span className="wallet-address">
-                  {account.substring(0, 6)}...{account.substring(account.length - 4)}
-                </span>
-                <i className="fas fa-user-circle"></i>
-              </button>
-              
-              {showProfileMenu && (
-                <div className="profile-dropdown">
-                  <div className="profile-header">
-                    <h3>My Wallet</h3>
-                    <p className="wallet-address-full">{account}</p>
-                  </div>
-                  <ul className="profile-menu">
-                    <li><button>My Profile</button></li>
-                    <li><button>My NFTs</button></li>
-                    <li><button>My Investments</button></li>
-                    <li><button>Settings</button></li>
-                    <li><button className="disconnect-btn" onClick={disconnectWallet}>Disconnect</button></li>
-                  </ul>
-                </div>
-              )}
-            </div>
-          )}
         </div>
       </header>
       
@@ -160,6 +177,7 @@ function App() {
       <main className="main-content">
         {renderSection()}
       </main>
+      
       {/* Footer */}
       <footer className="app-footer">
         <div className="footer-content">
