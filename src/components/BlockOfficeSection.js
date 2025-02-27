@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useWallet } from '../contexts/WalletContext';
 
 const BlockOfficeSection = () => {
@@ -229,7 +229,7 @@ const BlockOfficeSection = () => {
                   <span className="news-date">
                     <i className="far fa-calendar-alt"></i> {news.date}
                   </span>
-                  <a href="#" className="read-more">Read More</a>
+                  <a href="/news" className="read-more">Read More</a>
                 </div>
               </div>
             </div>
