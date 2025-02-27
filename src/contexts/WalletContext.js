@@ -1,5 +1,4 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { ethers } from 'ethers';
 
 // Create context
 const WalletContext = createContext();
@@ -7,36 +6,15 @@ const WalletContext = createContext();
 // Provider component
 export const WalletProvider = ({ children }) => {
   const [account, setAccount] = useState(null);
-  const [chainId, setChainId] = useState(null);
-  const [provider, setProvider] = useState(null);
-  const [filmTokenContract, setFilmTokenContract] = useState(null);
-  const [isMetaMaskInstalled, setIsMetaMaskInstalled] = useState(true);
+  const [isMetaMaskInstalled, setIsMetaMaskInstalled] = useState(false);
 
   useEffect(() => {
     // Check if MetaMask is installed
-    if (typeof window.ethereum !== 'undefined') {
+    if (typeof window !== 'undefined' && window.ethereum) {
       setIsMetaMaskInstalled(true);
-      
-      // Initialize provider
-      const provider = new ethers.providers.Web3Provider(window.ethereum);
-      setProvider(provider);
       
       // Check if already connected
       checkIfWalletIsConnected();
-      
-      // Listen for account changes
-      window.ethereum.on('accountsChanged', handleAccountsChanged);
-      
-      // Listen for chain changes
-      window.ethereum.on('chainChanged', handleChainChanged);
-      
-      return () => {
-        // Clean up listeners
-        window.ethereum.removeListener('accountsChanged', handleAccountsChanged);
-        window.ethereum.removeListener('chainChanged', handleChainChanged);
-      };
-    } else {
-      setIsMetaMaskInstalled(false);
     }
   }, []);
 
@@ -48,27 +26,10 @@ export const WalletProvider = ({ children }) => {
       
       if (accounts.length > 0) {
         setAccount(accounts[0]);
-        const chainId = await window.ethereum.request({ method: 'eth_chainId' });
-        setChainId(chainId);
       }
     } catch (error) {
       console.error("Error checking if wallet is connected:", error);
     }
-  };
-
-  const handleAccountsChanged = (accounts) => {
-    if (accounts.length === 0) {
-      // User disconnected their wallet
-      setAccount(null);
-    } else {
-      setAccount(accounts[0]);
-    }
-  };
-
-  const handleChainChanged = (chainId) => {
-    setChainId(chainId);
-    // Reload the page when chain changes
-    window.location.reload();
   };
 
   const connectWallet = async () => {
@@ -81,18 +42,9 @@ export const WalletProvider = ({ children }) => {
       const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
       setAccount(accounts[0]);
       
-      const chainId = await window.ethereum.request({ method: 'eth_chainId' });
-      setChainId(chainId);
-      
       return accounts[0];
     } catch (error) {
       console.error("Error connecting wallet:", error);
-      if (error.code === 4001) {
-        // User rejected the connection request
-        alert("Please connect to MetaMask to use all features.");
-      } else {
-        alert("Error connecting to wallet. Please try again.");
-      }
       return null;
     }
   };
@@ -104,12 +56,13 @@ export const WalletProvider = ({ children }) => {
   // Value to be provided by the context
   const value = {
     account,
-    chainId,
-    provider,
-    filmTokenContract,
     isMetaMaskInstalled,
     connectWallet,
-    disconnectWallet
+    disconnectWallet,
+    // Add dummy values for any other properties used in components
+    provider: null,
+    filmTokenContract: null,
+    chainId: null
   };
 
   return (
