@@ -1,4 +1,18 @@
-import React, { useState } from 'react';
+function App() {
+  console.log("App component rendering");
+  
+  const [activeSection, setActiveSection] = useState('nftmarket');
+  const [notifications] = useState([]);
+  const [userProfile] = useState(null);
+  const [showProfileMenu, setShowProfileMenu] = useState(false);
+  const [showNotifications, setShowNotifications] = useState(false);
+  
+  const { account, connectWallet, disconnectWallet, isMetaMaskInstalled } = useWallet();
+  
+  console.log("Wallet context values:", { account, isMetaMaskInstalled });
+  
+  // Rest of your component...
+  import React, { useState } from 'react';
 import { useWallet } from './contexts/WalletContext';
 import NFTMarketSection from './components/NFTMarketSection';
 import IndieFundSection from './components/IndieFundSection';
