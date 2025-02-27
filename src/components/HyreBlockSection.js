@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useWallet } from '../contexts/WalletContext';
 import { motion, AnimatePresence } from 'framer-motion';
+import './HyreBlock.css'; // Import the CSS file here
 
 const HyreBlockSection = () => {
   const { account, error: walletError } = useWallet();
