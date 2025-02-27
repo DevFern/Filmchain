@@ -6,85 +6,56 @@ const WalletContext = createContext();
 // Provider component
 export const WalletProvider = ({ children }) => {
   const [account, setAccount] = useState(null);
-  const [isMetaMaskInstalled, setIsMetaMaskInstalled] = useState(false);
-  const [network, setNetwork] = useState(null);
+  const [isMetaMaskInstalled, setIsMetaMaskInstalled] = useState(true);
+  const [filmBalance, setFilmBalance] = useState(1000); // Mock balance
+  const [error, setError] = useState(null);
 
   // Check if MetaMask is installed
   useEffect(() => {
-    if (window.ethereum) {
-      setIsMetaMaskInstalled(true);
-    } else {
-      setIsMetaMaskInstalled(false);
-    }
-  }, []);
-
-  // Connect wallet
-  const connectWallet = async () => {
-    if (!isMetaMaskInstalled) {
-      alert("MetaMask is not installed. Please install it to use this feature.");
-      return null;
-    }
-
-    try {
-      const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
-      setAccount(accounts[0]);
-      const chainId = await window.ethereum.request({ method: 'eth_chainId' });
-      setNetwork(chainId);
-      return accounts[0];
-    } catch (error) {
-      console.error("Error connecting wallet:", error);
-      return null;
-    }
-  };
-
-  // Disconnect wallet
-  const disconnectWallet = () => {
-    setAccount(null);
-    setNetwork(null);
-  };
-
-  // Handle account or network changes
-  useEffect(() => {
-    if (window.ethereum) {
-      // Listen for account changes
-      window.ethereum.on('accountsChanged', (accounts) => {
-        if (accounts.length > 0) {
-          setAccount(accounts[0]);
-        } else {
-          disconnectWallet();
-        }
-      });
-
-      // Listen for network changes
-      window.ethereum.on('chainChanged', (chainId) => {
-        setNetwork(chainId);
-        window.location.reload(); // Reload the page to reflect network changes
-      });
-    }
-
-    return () => {
+    const checkMetaMask = async () => {
       if (window.ethereum) {
-        window.ethereum.removeListener('accountsChanged', () => {});
-        window.ethereum.removeListener('chainChanged', () => {});
+        setIsMetaMaskInstalled(true);
+      } else {
+        setIsMetaMaskInstalled(false);
       }
     };
+
+    checkMetaMask();
   }, []);
+
+  const connectWallet = async () => {
+    try {
+      // In a real app, you would connect to MetaMask here
+      // For now, we'll just simulate a successful connection
+      setAccount("0x1234567890abcdef1234567890abcdef12345678");
+      return "0x1234567890abcdef1234567890abcdef12345678";
+    } catch (error) {
+      console.error("Error connecting wallet:", error);
+      setError("Failed to connect wallet. Please try again.");
+      return null;
+    }
+  };
+
+  const disconnectWallet = () => {
+    setAccount(null);
+  };
 
   // Value to be provided by the context
   const value = {
     account,
     isMetaMaskInstalled,
+    filmBalance,
     connectWallet,
     disconnectWallet,
-    network,
+    error
   };
 
-return (
-  <WalletContext.Provider value={value}>
-    {children}
-  </WalletContext.Provider>
-);
-
+  return (
+    <WalletContext.Provider value={value}>
+      {children}
+    </WalletContext.Provider>
+  );
+};
 
 // Custom hook to use the wallet context
 export const useWallet = () => {
