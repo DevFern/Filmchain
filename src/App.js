@@ -22,17 +22,17 @@ function App() {
   const renderSection = () => {
     switch (activeSection) {
       case 'nftmarket':
-        return <NFTMarket />;
+        return <NFTMarketSection />;
       case 'indiefund':
-        return <IndieFund />;
+        return <IndieFundSection />;
       case 'hyreblock':
-        return <HyreBlock />;
+        return <HyreBlockSection />;
       case 'blockoffice':
-        return <BlockOffice />;
+        return <BlockOfficeSection />;
       case 'communityvoice':
-        return <CommunitySection />;
+        return <CommunityVoiceSection />;
       default:
-        return <NFTMarket />;
+        return <NFTMarketSection />;
     }
   };
 
@@ -49,140 +49,149 @@ function App() {
   // MetaMask installation prompt
   if (!isMetaMaskInstalled) {
     return (
-      <div class="metamask-prompt">
-        <div class="metamask-prompt-content">
-          <h2>Meta Required</h2>
-         <p>Please MetaMask to use the FilmChain platform.</p>
-         <p>Meta is a browser extension that allows you to interact with blockchain applications.</p>
-         <a 
-           ="https://metamask.io/download/" 
+      <div className="metamask-prompt">
+        <div className="metamask-prompt-content">
+          <h2>MetaMask Required</h2>
+          <p>Please install MetaMask to use the FilmChain platform.</p>
+          <p>MetaMask is a browser extension that allows you to interact with blockchain applications.</p>
+          <a 
+            href="https://metamask.io/download/" 
             target="_blank" 
             rel="noopener noreferrer"
             className="install-metamask-btn"
           >
             Install MetaMask
           </a>
-         <p class="metamask-note">After installing, please refresh this page.</p>
-       </div>
- </div>
- );
+          <p className="metamask-note">After installing, please refresh this page.</p>
+        </div>
+      </div>
+    );
   }
 
   return (
-    <div class="app-container">
+    <div className="app-container">
       {/* Header */}
-      <headerName="app-header">
-        <div class="logo-container">
+      <header className="app-header">
+        <div className="logo-container">
           {/* Updated to use the external logo URL */}
           <img 
-           ="https://i.ibb.co/dsc9RSQ6/filmchain-logo.jpg" 
+            src="https://i.ibb.co/dsc9RSQ6/filmchain-logo.jpg" 
             alt="FilmChain Logo" 
             className="logo" 
           />
-          <h1>Film</h1>
-       </div>
-        <nav class="main-nav">
+          <h1>FilmChain</h1>
+        </div>
+        <nav className="main-nav">
           <ul>
-           ['nftmarket', 'indiefund', 'hyreblock', 'blockoffice', 'communityvoice'].map((section) => (
-              <li keysection} className={activeSection === section ? 'active' : ''}>
-                <buttonClick={() => setActiveSection(section)}>
+            {['nftmarket', 'indiefund', 'hyreblock', 'blockoffice', 'communityvoice'].map((section) => (
+              <li key={section} className={activeSection === section ? 'active' : ''}>
+                <button onClick={() => setActiveSection(section)}>
                   {section.charAt(0).toUpperCase() + section.slice(1).replace(/([A-Z])/g, ' $1')}
-                </button              </li>
-                     </ul>
-       </nav>
-        <div class="header-actions">
+                </button>
+              </li>
+            ))}
+          </ul>
+        </nav>
+        <div className="header-actions">
           {/* Notifications */}
-          <div class="notifications-container">
-            <buttonName="notifications-btn" onClick={toggleNotifications}>
-              <i class="fas fa-bell"></i>
-             notifications.length > 0 && (
-                <span class="notification-badge">{notifications.length}</span>
- )}
-            </button            
+          <div className="notifications-container">
+            <button className="notifications-btn" onClick={toggleNotifications}>
+              <i className="fas fa-bell"></i>
+              {notifications.length > 0 && (
+                <span className="notification-badge">{notifications.length}</span>
+              )}
+            </button>
+            
             {showNotifications && (
-              <div class="notifications-dropdown">
-                <h3>Notifications3>
+              <div className="notifications-dropdown">
+                <h3>Notifications</h3>
                 {notifications.length === 0 ? (
-                  <p class="no-notifications">No new notifications</p>
-                : (
-                  <ul class="notifications-list">
+                  <p className="no-notifications">No new notifications</p>
+                ) : (
+                  <ul className="notifications-list">
                     {notifications.map((notification, index) => (
-                      <li keyindex} className="notification-item">
-                        <div class="notification-content">
-                          <p>{notification}</p>
-                         <span class="notification-time">{notification.time}</span>
- </div>
- </li>
-                                     </ul>
-                             </div>
- )}
+                      <li key={index} className="notification-item">
+                        <div className="notification-content">
+                          <p>{notification.message}</p>
+                          <span className="notification-time">{notification.time}</span>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            )}
           </div>
           {/* Wallet Connection */}
           {!account ? (
-            <buttonName="connect-wallet-btn" onClick={connectWallet}>
+            <button className="connect-wallet-btn" onClick={connectWallet}>
               Connect Wallet
-            </button          ) : (
-            <div class="profile-container">
-              <buttonName="profile-btn" onClick={toggleProfileMenu}>
-                <span class="wallet-address">
+            </button>
+          ) : (
+            <div className="profile-container">
+              <button className="profile-btn" onClick={toggleProfileMenu}>
+                <span className="wallet-address">
                   {account.substring(0, 6)}...{account.substring(account.length - 4)}
                 </span>
- <i class="fas fa-user-circle"></i>
-             </button              
+                <i className="fas fa-user-circle"></i>
+              </button>
+              
               {showProfileMenu && (
-                <div class="profile-dropdown">
-                  <div class="profile-header">
-                    <h3>My Wallet3>
-                    <p class="wallet-address-full">{account}</p>
-                 </div>
- <ul class="profile-menu">
-                    <li><buttonMy Profile</button</li>
-                   <li><buttonMy NFTs</button</li>
-                   <li><buttonMy Investments</button</li>
-                   <li><buttonSettings</button</li>
-                   <li><buttonName="disconnect-btn" onClick={disconnectWallet}>Disconnect</button</li>
-                 </ul>
-               </div>
- )}
+                <div className="profile-dropdown">
+                  <div className="profile-header">
+                    <h3>My Wallet</h3>
+                    <p className="wallet-address-full">{account}</p>
+                  </div>
+                  <ul className="profile-menu">
+                    <li><button>My Profile</button></li>
+                    <li><button>My NFTs</button></li>
+                    <li><button>My Investments</button></li>
+                    <li><button>Settings</button></li>
+                    <li><button className="disconnect-btn" onClick={disconnectWallet}>Disconnect</button></li>
+                  </ul>
+                </div>
+              )}
             </div>
- )}
+          )}
         </div>
- </header      
+      </header>
+      
       {/* Main Content */}
-      <main class="main-content">
+      <main className="main-content">
         {renderSection()}
       </main>
       {/* Footer */}
-      <footerName="app-footer">
-        <div class="footer-content">
-          <div class="footer-logo">
+      <footer className="app-footer">
+        <div className="footer-content">
+          <div className="footer-logo">
             <img 
-             ="https://i.ibb.co/dsc9RSQ6/filmchain-logo.jpg" 
+              src="https://i.ibb.co/dsc9RSQ6/filmchain-logo.jpg" 
               alt="FilmChain Logo" 
               className="logo-small" 
             />
-            <p>Film © 2023</p>
-         </div>
- <div class="footer-links">
-            <a hrefabout">About</a>
-           <a hrefterms">Terms</a>
-           <a hrefprivacy">Privacy</a>
-           <a hrefcontact">Contact</a>
-         </div>
- <div class="social-links">
-            <a hrefhttps://twitter.com" target="_blank" rel="noopener noreferrer">
-              <i class="fab fa-twitter"></i>
-           </a>
-           <a hrefhttps://discord.com" target="_blank" rel="noopener noreferrer">
-              <i class="fab fa-discord"></i>
-           </a>
-           <a hrefhttps://github.com" target="_blank" rel="noopener noreferrer">
-              <i class="fab fa-github"></i>
-           </a>
-         </div>
- </div>
- </footer    </div>
- );
+            <p>FilmChain © 2023</p>
+          </div>
+          <div className="footer-links">
+            <a href="/about">About</a>
+            <a href="/terms">Terms</a>
+            <a href="/privacy">Privacy</a>
+            <a href="/contact">Contact</a>
+          </div>
+          <div className="social-links">
+            <a href="https://twitter.com" target="_blank" rel="noopener noreferrer">
+              <i className="fab fa-twitter"></i>
+            </a>
+            <a href="https://discord.com" target="_blank" rel="noopener noreferrer">
+              <i className="fab fa-discord"></i>
+            </a>
+            <a href="https://github.com" target="_blank" rel="noopener noreferrer">
+              <i className="fab fa-github"></i>
+            </a>
+          </div>
+        </div>
+      </footer>
+    </div>
+  );
 }
 
 export default App;
