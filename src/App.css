@@ -1447,3 +1447,54 @@ main {
     padding: 1rem;
   }
 }
+/* MetaMask Prompt */
+.metamask-prompt {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  background-color: #f5f5f5;
+  padding: 20px;
+}
+
+.metamask-prompt-content {
+  background-color: white;
+  border-radius: 10px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  padding: 40px;
+  max-width: 500px;
+  text-align: center;
+}
+
+.metamask-prompt-content h2 {
+  color: #333;
+  margin-bottom: 20px;
+}
+
+.metamask-prompt-content p {
+  color: #666;
+  margin-bottom: 15px;
+  line-height: 1.5;
+}
+
+.install-metamask-btn {
+  display: inline-block;
+  background-color: #f6851b;
+  color: white;
+  padding: 12px 24px;
+  border-radius: 5px;
+  text-decoration: none;
+  font-weight: bold;
+  margin: 20px 0;
+  transition: background-color 0.3s;
+}
+
+.install-metamask-btn:hover {
+  background-color: #e2761b;
+}
+
+.metamask-note {
+  font-size: 14px;
+  color: #999;
+  margin-top: 20px;
+}
