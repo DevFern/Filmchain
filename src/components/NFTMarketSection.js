@@ -385,7 +385,7 @@ const NFTMarketSection = () => {
         ))}
       </div>
 
-      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="nft-grid">
         {items
           .filter(item => activeCategory === 'all' || item.type.toLowerCase() === activeCategory)
           .map(item => (
