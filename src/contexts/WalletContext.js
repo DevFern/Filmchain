@@ -13,19 +13,21 @@ export const WalletProvider = ({ children }) => {
   const [account, setAccount] = useState(null);
   const [provider, setProvider] = useState(null);
   const [signer, setSigner] = useState(null);
-  const [filmBalance, setFilmBalance] = useState(0);
+  const [filmBalance, setFilmBalance] = useState(1000);
   const [error, setError] = useState(null);
   const [isMetaMaskInstalled, setIsMetaMaskInstalled] = useState(true);
   const [helia, setHelia] = useState(null);
   const [fs, setFs] = useState(null);
+  const [isInitializing, setIsInitializing] = useState(true);
 
   useEffect(() => {
-    checkIfMetaMaskIsInstalled();
+    checkIfMetaMaskInstalled();
     initializeHelia();
   }, []);
 
   const initializeHelia = async () => {
     try {
+      setIsInitializing(true);
       // For HTTP client (similar to ipfs-http-client)
       const heliaHttpClient = await createHttpClient({
         url: 'https://ipfs.infura.io:5001/api/v0' // Use your IPFS gateway
@@ -33,17 +35,14 @@ export const WalletProvider = ({ children }) => {
       
       setHelia(heliaHttpClient);
       setFs(unixfs(heliaHttpClient));
-      
-      // Alternatively, for a local node:
-      // const heliaNode = await createHelia();
-      // setHelia(heliaNode);
-      // setFs(unixfs(heliaNode));
     } catch (err) {
       console.error("Failed to initialize Helia:", err);
+    } finally {
+      setIsInitializing(false);
     }
   };
 
-  const checkIfMetaMaskIsInstalled = () => {
+  const checkIfMetaMaskInstalled = () => {
     const { ethereum } = window;
     if (!ethereum || !ethereum.isMetaMask) {
       setIsMetaMaskInstalled(false);
@@ -155,6 +154,7 @@ export const WalletProvider = ({ children }) => {
         filmBalance,
         error,
         isMetaMaskInstalled,
+        isInitializing,
         connectWallet,
         disconnectWallet,
         uploadToIPFS,
