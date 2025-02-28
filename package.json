@@ -10,12 +10,14 @@
     "axios": "^1.2.1",
     "ethers": "^5.7.2",
     "framer-motion": "^10.16.4",
-    "ipfs-http-client": "^59.0.0",
+    "helia": "^2.0.3",                      // Replace ipfs-http-client
+    "@helia/unixfs": "^1.4.2",              // Add for IPFS functionality
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-router-dom": "^6.4.5",
     "react-scripts": "5.0.1",
-    "web3": "^1.8.1"
+    "web3": "^1.8.1",
+    "uuid": "^9.0.1"                        // Update from older version
   },
   "scripts": {
     "start": "react-scripts start",
