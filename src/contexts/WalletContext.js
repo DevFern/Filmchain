@@ -1,9 +1,6 @@
 // src/contexts/WalletContext.js
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import { ethers } from 'ethers';
-import { createHelia } from 'helia';
-import { unixfs } from '@helia/unixfs';
-import { createHttpClient } from '@helia/http-client';
+import React, { createContext, useState, useContext, useEffect } from 'react';
+import Web3 from 'web3';
 
 const WalletContext = createContext();
 
@@ -11,156 +8,128 @@ export const useWallet = () => useContext(WalletContext);
 
 export const WalletProvider = ({ children }) => {
   const [account, setAccount] = useState(null);
-  const [provider, setProvider] = useState(null);
-  const [signer, setSigner] = useState(null);
-  const [filmBalance, setFilmBalance] = useState(1000);
+  const [web3, setWeb3] = useState(null);
+  const [isConnecting, setIsConnecting] = useState(false);
   const [error, setError] = useState(null);
-  const [isMetaMaskInstalled, setIsMetaMaskInstalled] = useState(true);
-  const [helia, setHelia] = useState(null);
-  const [fs, setFs] = useState(null);
-  const [isInitializing, setIsInitializing] = useState(true);
+  const [networkId, setNetworkId] = useState(null);
+  const [filmBalance, setFilmBalance] = useState(0);
+  const [isMetaMaskInstalled, setIsMetaMaskInstalled] = useState(false);
 
   useEffect(() => {
-    checkIfMetaMaskInstalled();
-    initializeHelia();
+    // Check if MetaMask is installed
+    if (window.ethereum) {
+      setIsMetaMaskInstalled(true);
+      
+      // Handle account changes
+      const handleAccountsChanged = (accounts) => {
+        if (accounts.length === 0) {
+          // User disconnected their wallet
+          setAccount(null);
+          setError('Wallet disconnected');
+        } else {
+          // User switched accounts
+          setAccount(accounts[0]);
+          setError(null);
+        }
+      };
+
+      // Handle chain changes
+      const handleChainChanged = (chainId) => {
+        window.location.reload(); // Recommended by MetaMask
+      };
+
+      // Subscribe to events
+      window.ethereum.on('accountsChanged', handleAccountsChanged);
+      window.ethereum.on('chainChanged', handleChainChanged);
+
+      // Check if already connected
+      window.ethereum.request({ method: 'eth_accounts' })
+        .then(accounts => {
+          if (accounts.length > 0) {
+            setAccount(accounts[0]);
+            initializeWeb3();
+          }
+        })
+        .catch(err => {
+          console.error('Error checking connected accounts:', err);
+        });
+
+      // Cleanup
+      return () => {
+        window.ethereum.removeListener('accountsChanged', handleAccountsChanged);
+        window.ethereum.removeListener('chainChanged', handleChainChanged);
+      };
+    }
   }, []);
 
-  const initializeHelia = async () => {
+  const initializeWeb3 = async () => {
     try {
-      setIsInitializing(true);
-      // For HTTP client (similar to ipfs-http-client)
-      const heliaHttpClient = await createHttpClient({
-        url: 'https://ipfs.infura.io:5001/api/v0' // Use your IPFS gateway
-      });
+      const web3Instance = new Web3(window.ethereum);
+      setWeb3(web3Instance);
       
-      setHelia(heliaHttpClient);
-      setFs(unixfs(heliaHttpClient));
+      // Get network ID
+      const network = await web3Instance.eth.net.getId();
+      setNetworkId(network);
+      
+      // Here you would typically load your token contract and get balance
+      // For demo purposes, we'll just set a mock balance
+      setFilmBalance(1000);
     } catch (err) {
-      console.error("Failed to initialize Helia:", err);
-    } finally {
-      setIsInitializing(false);
-    }
-  };
-
-  const checkIfMetaMaskInstalled = () => {
-    const { ethereum } = window;
-    if (!ethereum || !ethereum.isMetaMask) {
-      setIsMetaMaskInstalled(false);
-    } else {
-      setIsMetaMaskInstalled(true);
-      setupEventListeners();
-    }
-  };
-
-  const setupEventListeners = () => {
-    const { ethereum } = window;
-    
-    if (ethereum) {
-      ethereum.on('accountsChanged', (accounts) => {
-        if (accounts.length > 0) {
-          setAccount(accounts[0]);
-        } else {
-          setAccount(null);
-        }
-      });
-      
-      ethereum.on('chainChanged', () => {
-        window.location.reload();
-      });
+      console.error('Error initializing web3:', err);
+      setError('Failed to initialize blockchain connection');
     }
   };
 
   const connectWallet = async () => {
+    if (!window.ethereum) {
+      setError('MetaMask is not installed. Please install MetaMask to use this application.');
+      return;
+    }
+
+    setIsConnecting(true);
+    setError(null);
+
     try {
-      const { ethereum } = window;
+      const accounts = await window.ethereum.request({ 
+        method: 'eth_requestAccounts' 
+      });
       
-      if (!ethereum) {
-        setError("Please install MetaMask to use this feature");
-        return;
-      }
-      
-      const accounts = await ethereum.request({ method: 'eth_requestAccounts' });
-      
-      if (accounts.length > 0) {
-        setAccount(accounts[0]);
-        
-        const provider = new ethers.providers.Web3Provider(ethereum);
-        setProvider(provider);
-        
-        const signer = provider.getSigner();
-        setSigner(signer);
-        
-        // In a real app, you would fetch the actual token balance here
-        setFilmBalance(1000); // Placeholder value
-        
-        setError(null);
-      }
+      setAccount(accounts[0]);
+      await initializeWeb3();
     } catch (err) {
-      console.error("Error connecting wallet:", err);
-      setError("Failed to connect wallet. Please try again.");
+      console.error('Error connecting wallet:', err);
+      if (err.code === 4001) {
+        // User rejected the connection request
+        setError('You rejected the connection request. Please connect your wallet to use all features.');
+      } else {
+        setError('Failed to connect wallet. Please try again.');
+      }
+    } finally {
+      setIsConnecting(false);
     }
   };
 
   const disconnectWallet = () => {
     setAccount(null);
-    setProvider(null);
-    setSigner(null);
+    setWeb3(null);
+    setNetworkId(null);
     setFilmBalance(0);
   };
 
-  // Function to upload to IPFS using Helia
-  const uploadToIPFS = async (file) => {
-    if (!fs) {
-      throw new Error("IPFS not initialized");
-    }
-    
-    try {
-      const fileBuffer = await file.arrayBuffer();
-      const cid = await fs.addBytes(new Uint8Array(fileBuffer));
-      return cid.toString();
-    } catch (err) {
-      console.error("Error uploading to IPFS:", err);
-      throw err;
-    }
-  };
-
-  // Function to get content from IPFS using Helia
-  const getFromIPFS = async (cid) => {
-    if (!fs) {
-      throw new Error("IPFS not initialized");
-    }
-    
-    try {
-      const decoder = new TextDecoder();
-      let data = '';
-      
-      for await (const chunk of fs.cat(cid)) {
-        data += decoder.decode(chunk, { stream: true });
-      }
-      
-      return data;
-    } catch (err) {
-      console.error("Error getting from IPFS:", err);
-      throw err;
-    }
+  const value = {
+    account,
+    web3,
+    networkId,
+    filmBalance,
+    isConnecting,
+    error,
+    isMetaMaskInstalled,
+    connectWallet,
+    disconnectWallet
   };
 
   return (
-    <WalletContext.Provider
-      value={{
-        account,
-        provider,
-        signer,
-        filmBalance,
-        error,
-        isMetaMaskInstalled,
-        isInitializing,
-        connectWallet,
-        disconnectWallet,
-        uploadToIPFS,
-        getFromIPFS
-      }}
-    >
+    <WalletContext.Provider value={value}>
       {children}
     </WalletContext.Provider>
   );
