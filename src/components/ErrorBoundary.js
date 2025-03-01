@@ -1,3 +1,4 @@
+// src/components/ErrorBoundary.js
 import React from 'react';
 
 class ErrorBoundary extends React.Component {
@@ -7,37 +8,56 @@ class ErrorBoundary extends React.Component {
   }
 
   static getDerivedStateFromError(error) {
-    // Update state so the next render will show the fallback UI
     return { hasError: true };
   }
 
   componentDidCatch(error, errorInfo) {
-    // You can also log the error to an error reporting service
     console.error("Error caught by ErrorBoundary:", error, errorInfo);
     this.setState({
       error: error,
       errorInfo: errorInfo
     });
+    
+    // You could send this error to an error reporting service here
+    // Example: logErrorToService(error, errorInfo);
   }
+
+  handleReload = () => {
+    window.location.reload();
+  };
 
   render() {
     if (this.state.hasError) {
-      // You can render any custom fallback UI
       return (
-        <div style={{ 
-          padding: '20px', 
-          margin: '20px', 
-          backgroundColor: '#ffebee', 
-          border: '1px solid #f44336',
-          borderRadius: '4px'
-        }}>
-          <h2>Something went wrong.</h2>
-          <details style={{ whiteSpace: 'pre-wrap' }}>
-            <summary>Show error details</summary>
-            {this.state.error && this.state.error.toString()}
-            <br />
-            {this.state.errorInfo && this.state.errorInfo.componentStack}
-          </details>
+        <div className="error-boundary">
+          <div className="error-content">
+            <h2>Something went wrong</h2>
+            <p>We're sorry, but there was an error loading this section of the application.</p>
+            
+            <div className="error-actions">
+              <button 
+                className="btn-primary" 
+                onClick={this.handleReload}
+              >
+                Reload Page
+              </button>
+              
+              <button 
+                className="btn-outline"
+                onClick={() => this.setState({ hasError: false })}
+              >
+                Try Again
+              </button>
+            </div>
+            
+            <details className="error-details">
+              <summary>Technical Details</summary>
+              <p>{this.state.error && this.state.error.toString()}</p>
+              <p className="error-stack">
+                {this.state.errorInfo && this.state.errorInfo.componentStack}
+              </p>
+            </details>
+          </div>
         </div>
       );
     }
