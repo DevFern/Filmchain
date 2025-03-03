@@ -6,6 +6,7 @@ const { execSync } = require('child_process');
 // Paths
 const packageJsonPath = path.join(__dirname, 'package.json');
 const npmrcPath = path.join(__dirname, '.npmrc');
+const indieFundSectionPath = path.join(__dirname, 'src/components/IndieFundSection.js');
 
 // Function to log with timestamp
 function logWithTime(message) {
@@ -33,10 +34,21 @@ try {
   }
   
   // Read package.json
-  const packageJson = require(packageJsonPath);
+  const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'));
   
   // Log dependencies for debugging
   logWithTime('Dependencies found: ' + Object.keys(packageJson.dependencies).length);
+  
+  // Add missing dependencies
+  if (!packageJson.dependencies['ajv']) {
+    packageJson.dependencies['ajv'] = '^8.12.0';
+    logWithTime('Added missing dependency: ajv');
+  }
+  
+  if (!packageJson.dependencies['ajv-keywords']) {
+    packageJson.dependencies['ajv-keywords'] = '^5.1.0';
+    logWithTime('Added missing dependency: ajv-keywords');
+  }
   
   // Check for problematic dependencies
   if (packageJson.dependencies['@helia/http-client']) {
@@ -49,6 +61,12 @@ try {
     logWithTime('Updated @helia/http-client to @helia/http');
   }
   
+  // Add postinstall script if it doesn't exist
+  if (!packageJson.scripts.postinstall) {
+    packageJson.scripts.postinstall = 'node build-fix.js';
+    logWithTime('Added postinstall script');
+  }
+  
   // Add resolutions for known vulnerable packages
   if (!packageJson.resolutions) {
     packageJson.resolutions = {};
@@ -56,6 +74,8 @@ try {
   
   // Define packages that need resolution
   const vulnerablePackages = {
+    'ajv': '^8.12.0',
+    'ajv-keywords': '^5.1.0',
     'sourcemap-codec': 'npm:@jridgewell/sourcemap-codec@latest',
     'rollup-plugin-terser': 'npm:@rollup/plugin-terser@latest',
     '@humanwhocodes/object-schema': 'npm:@eslint/object-schema@latest',
@@ -80,9 +100,7 @@ try {
     'browserslist': '^4.16.5',
     'cross-spawn': '^7.0.3',
     'html-minifier': '^4.0.0',
-    'ip': '^2.0.0',
-    'ajv': '^8.12.0',
-    'ajv-keywords': '^5.1.0',
+    'ip': '^2.0.0'
   };
   
   // Add all vulnerable packages to resolutions
@@ -108,24 +126,25 @@ legacy-peer-deps=true
   logWithTime('Updated .npmrc file');
   
   // Write updated package.json if changes were made
-if (resolutionsUpdated) {
-  try {
-    // Parse and stringify to ensure valid JSON
-    const validJson = JSON.stringify(packageJson, null, 2);
-    fs.writeFileSync(packageJsonPath, validJson);
-    logWithTime('Updated package.json with valid JSON format');
-  } catch (error) {
-    logWithTime(`Error creating valid JSON: ${error.message}`);
-    // Try to recover by using a more cautious approach
+  if (resolutionsUpdated) {
     try {
-      const safeJson = JSON.parse(JSON.stringify(packageJson));
-      fs.writeFileSync(packageJsonPath, JSON.stringify(safeJson, null, 2));
-      logWithTime('Recovered and wrote package.json with safe JSON format');
-    } catch (recoveryError) {
-      logWithTime(`Failed to recover package.json: ${recoveryError.message}`);
+      // Parse and stringify to ensure valid JSON
+      const validJson = JSON.stringify(packageJson, null, 2);
+      fs.writeFileSync(packageJsonPath, validJson);
+      logWithTime('Updated package.json with valid JSON format');
+    } catch (error) {
+      logWithTime(`Error creating valid JSON: ${error.message}`);
+      // Try to recover by using a more cautious approach
+      try {
+        const safeJson = JSON.parse(JSON.stringify(packageJson));
+        fs.writeFileSync(packageJsonPath, JSON.stringify(safeJson, null, 2));
+        logWithTime('Recovered and wrote package.json with safe JSON format');
+      } catch (recoveryError) {
+        logWithTime(`Failed to recover package.json: ${recoveryError.message}`);
+      }
     }
   }
-}
+  
   // Check for and create vercel.json if it doesn't exist
   const vercelJsonPath = path.join(__dirname, 'vercel.json');
   if (!fs.existsSync(vercelJsonPath)) {
@@ -141,6 +160,24 @@ if (resolutionsUpdated) {
     
     fs.writeFileSync(vercelJsonPath, JSON.stringify(vercelJson, null, 2));
     logWithTime('Created vercel.json file');
+  }
+  
+  // Fix IndieFundSection.js syntax error if the file exists
+  if (fs.existsSync(indieFundSectionPath)) {
+    try {
+      let indieFundContent = fs.readFileSync(indieFundSectionPath, 'utf8');
+      
+      // Fix the specific syntax error at line 283
+      // Look for the pattern where setError(null is missing a closing parenthesis
+      const fixedContent = indieFundContent.replace(/setError\(null(?!\))/g, 'setError(null)');
+      
+      if (indieFundContent !== fixedContent) {
+        fs.writeFileSync(indieFundSectionPath, fixedContent);
+        logWithTime('Fixed syntax error in IndieFundSection.js');
+      }
+    } catch (error) {
+      logWithTime(`Error fixing IndieFundSection.js: ${error.message}`);
+    }
   }
   
   // Run npm dedupe to reduce duplicate packages
