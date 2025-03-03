@@ -12,7 +12,7 @@ export const WalletProvider = ({ children }) => {
   const [signer, setSigner] = useState(null);
   const [filmBalance, setFilmBalance] = useState(1000);
   const [error, setError] = useState(null);
-  const [isMetaMaskInstalled, setIsMetaMaskInstalled] = useState(false); // Start with false
+  const [isMetaMaskInstalled, setIsMetaMaskInstalled] = useState(null);
   const [isInitializing, setIsInitializing] = useState(true);
   const [isConnecting, setIsConnecting] = useState(false);
 
@@ -23,9 +23,9 @@ export const WalletProvider = ({ children }) => {
 
   // This function checks if MetaMask is installed
   const checkIfMetaMaskInstalled = () => {
+    console.log("Checking if MetaMask is installed...");
     const { ethereum } = window;
     
-    // This is the key fix - properly detect MetaMask
     if (ethereum && ethereum.isMetaMask) {
       console.log("MetaMask is installed!");
       setIsMetaMaskInstalled(true);
@@ -41,16 +41,17 @@ export const WalletProvider = ({ children }) => {
           } else {
             console.log("No connected accounts found");
           }
+          setIsInitializing(false);
         })
         .catch(err => {
           console.error("Error checking connected accounts:", err);
+          setIsInitializing(false);
         });
     } else {
       console.log("MetaMask is not installed");
       setIsMetaMaskInstalled(false);
+      setIsInitializing(false);
     }
-    
-    setIsInitializing(false);
   };
 
   const setupEventListeners = () => {
