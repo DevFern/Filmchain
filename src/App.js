@@ -11,19 +11,21 @@ import './App.css';
 import './components/DesignFixes.css';
 
 function App() {
-  // Keep the existing state and functions
-  const [activeSection, setActiveSection] = useState('indiefund'); // Changed default to indiefund
-  const [notifications] = useState([]);
+  // State for UI components
+  const [activeSection, setActiveSection] = useState('indiefund');
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
+  const [notifications] = useState([]);
 
+  // Get wallet context values
   const { 
     account, 
     connectWallet, 
     disconnectWallet, 
     isMetaMaskInstalled,
+    isInitializing,
     isConnecting,
     error: walletError
   } = useWallet();
@@ -38,6 +40,37 @@ function App() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  // Debug logging
+  useEffect(() => {
+    console.log("App render state:", {
+      isMetaMaskInstalled,
+      isInitializing,
+      account,
+      walletError
+    });
+  }, [isMetaMaskInstalled, isInitializing, account, walletError]);
+
+  // UI toggle functions
+  const toggleProfileMenu = () => {
+    setShowProfileMenu(!showProfileMenu);
+    if (showNotifications) setShowNotifications(false);
+  };
+
+  const toggleNotifications = () => {
+    setShowNotifications(!showNotifications);
+    if (showProfileMenu) setShowProfileMenu(false);
+  };
+
+  const toggleMenu = () => {
+    setMenuOpen(!menuOpen);
+  };
+
+  const handleSectionChange = (section) => {
+    setActiveSection(section);
+    setMenuOpen(false);
+  };
+
+  // Render the active section content
   const renderSection = () => {
     switch (activeSection) {
       case 'indiefund':
@@ -79,25 +112,18 @@ function App() {
     }
   };
 
-  // Keep the existing functions
-  const toggleProfileMenu = () => {
-    setShowProfileMenu(!showProfileMenu);
-    if (showNotifications) setShowNotifications(false);
-  };
-
-  const toggleNotifications = () => {
-    setShowNotifications(!showNotifications);
-    if (showProfileMenu) setShowProfileMenu(false);
-  };
-
-  const toggleMenu = () => {
-    setMenuOpen(!menuOpen);
-  };
-
-  const handleSectionChange = (section) => {
-    setActiveSection(section);
-    setMenuOpen(false);
-  };
+  // Show loading state while checking for MetaMask
+  if (isInitializing) {
+    return (
+      <div className="metamask-prompt">
+        <div className="metamask-prompt-content">
+          <h2>Loading FilmChain</h2>
+          <p>Checking for MetaMask wallet...</p>
+          <div className="loading-spinner"></div>
+        </div>
+      </div>
+    );
+  }
 
   // If MetaMask is not installed, show installation prompt
   if (!isMetaMaskInstalled) {
@@ -115,11 +141,13 @@ function App() {
           >
             Install MetaMask
           </a>
+          <p className="metamask-note">After installing, please refresh this page.</p>
         </div>
       </div>
     );
   }
 
+  // Main application UI
   return (
     <div className="app-container">
       <header className={`app-header ${isScrolled ? 'scrolled' : ''}`}>
@@ -138,7 +166,6 @@ function App() {
           
           <nav className={`main-nav ${menuOpen ? 'open' : ''}`}>
             <ul className="nav-list">
-              {/* Reordered navigation items */}
               <li>
                 <button 
                   className={`nav-button ${activeSection === 'indiefund' ? 'active' : ''}`}
@@ -187,9 +214,9 @@ function App() {
             </ul>
           </nav>
           
-          {/* Add the connect wallet button here */}
+          {/* Wallet Connection UI */}
           <div className="header-actions">
-            {isMetaMaskInstalled && !account && (
+            {!account ? (
               <button 
                 className="connect-wallet-btn" 
                 onClick={connectWallet}
@@ -197,9 +224,7 @@ function App() {
               >
                 {isConnecting ? 'Connecting...' : 'Connect Wallet'}
               </button>
-            )}
-            
-            {account && (
+            ) : (
               <div className="wallet-info">
                 <span className="wallet-address">
                   {account.substring(0, 6)}...{account.substring(account.length - 4)}
@@ -215,13 +240,14 @@ function App() {
       
       <main className="main-content">
         <div className="container">
+          {/* Display wallet errors if any */}
           {walletError && (
             <div className="wallet-error-banner">
               <i className="fas fa-exclamation-triangle"></i>
               <p>{walletError}</p>
               <button 
                 className="close-btn"
-                onClick={() => {/* Clear error */}}
+                onClick={() => {/* Clear error function would go here */}}
                 aria-label="Dismiss error"
               >
                 &times;
@@ -229,6 +255,7 @@ function App() {
             </div>
           )}
           
+          {/* Main content area */}
           <Suspense fallback={<div className="loading-spinner">Loading...</div>}>
             {renderSection()}
           </Suspense>
@@ -274,7 +301,7 @@ function App() {
             </div>
           </div>
           <div className="footer-bottom">
-            <p>&copy; 2024 FilmChain. All rights reserved.</p>
+            <p>&copy; {new Date().getFullYear()} FilmChain. All rights reserved.</p>
             <div className="footer-social">
               <a href="#twitter" aria-label="Twitter"><i className="fab fa-twitter"></i></a>
               <a href="#discord" aria-label="Discord"><i className="fab fa-discord"></i></a>
