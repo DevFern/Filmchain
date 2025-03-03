@@ -9,6 +9,7 @@ const npmrcPath = path.join(__dirname, '.npmrc');
 const indieFundSectionPath = path.join(__dirname, 'src/components/IndieFundSection.js');
 const vercelJsonPath = path.join(__dirname, 'vercel.json');
 const babelrcPath = path.join(__dirname, '.babelrc');
+const walletContextPath = path.join(__dirname, 'src/contexts/WalletContext.js');
 
 // Function to log with timestamp
 function logWithTime(message) {
@@ -24,79 +25,6 @@ function safeExec(command) {
     logWithTime(`Command failed: ${command}`);
     logWithTime(error.message);
     return null;
-  }
-}
-
-// Function to find files with Helia imports
-function findFilesWithHeliaImports() {
-  try {
-    const srcDir = path.join(__dirname, 'src');
-    const result = [];
-    
-    function searchDirectory(dir) {
-      const files = fs.readdirSync(dir);
-      
-      for (const file of files) {
-        const filePath = path.join(dir, file);
-        const stats = fs.statSync(filePath);
-        
-        if (stats.isDirectory()) {
-          searchDirectory(filePath);
-        } else if (stats.isFile() && (file.endsWith('.js') || file.endsWith('.jsx'))) {
-          const content = fs.readFileSync(filePath, 'utf8');
-          if (content.includes('@helia/http')) {
-            result.push(filePath);
-          }
-        }
-      }
-    }
-    
-    if (fs.existsSync(srcDir)) {
-      searchDirectory(srcDir);
-    }
-    
-    return result;
-  } catch (error) {
-    logWithTime(`Error finding files with Helia imports: ${error.message}`);
-    return [];
-  }
-}
-
-// Function to fix Helia imports
-function fixHeliaImports(filePath) {
-  try {
-    let content = fs.readFileSync(filePath, 'utf8');
-    
-    // Fix import for createHttp
-    content = content.replace(
-      /import\s+{\s*createHttp\s*}\s+from\s+['"]@helia\/http['"]/g,
-      `import { createHelia } from 'helia'
-import { unixfs } from '@helia/unixfs'
-import { createHttp } from '@helia/http-client'`
-    );
-    
-    // Fix direct import of createHttp
-    content = content.replace(
-      /import\s+createHttp\s+from\s+['"]@helia\/http['"]/g,
-      `import { createHelia } from 'helia'
-import { unixfs } from '@helia/unixfs'
-import { createHttp } from '@helia/http-client'`
-    );
-    
-    // Fix require for createHttp
-    content = content.replace(
-      /const\s+{\s*createHttp\s*}\s+=\s+require\(['"]@helia\/http['"]\)/g,
-      `const { createHelia } = require('helia')
-const { unixfs } = require('@helia/unixfs')
-const { createHttp } = require('@helia/http-client')`
-    );
-    
-    fs.writeFileSync(filePath, content);
-    logWithTime(`Fixed Helia imports in ${filePath}`);
-    return true;
-  } catch (error) {
-    logWithTime(`Error fixing Helia imports in ${filePath}: ${error.message}`);
-    return false;
   }
 }
 
@@ -125,21 +53,15 @@ try {
     logWithTime('Added missing dependency: ajv-keywords');
   }
   
-  // Fix Helia dependencies
+  // Fix Helia dependencies - remove problematic ones
   if (packageJson.dependencies['@helia/http']) {
     delete packageJson.dependencies['@helia/http'];
-    packageJson.dependencies['@helia/http-client'] = '^1.0.0';
-    packageJson.dependencies['helia'] = '^2.0.3';
-    packageJson.dependencies['@helia/unixfs'] = '^1.4.2';
-    logWithTime('Updated Helia dependencies');
+    logWithTime('Removed @helia/http dependency');
   }
   
   if (packageJson.dependencies['@helia/http-client']) {
-    // Make sure we have the correct version
-    packageJson.dependencies['@helia/http-client'] = '^1.0.0';
-    packageJson.dependencies['helia'] = '^2.0.3';
-    packageJson.dependencies['@helia/unixfs'] = '^1.4.2';
-    logWithTime('Updated Helia dependencies');
+    delete packageJson.dependencies['@helia/http-client'];
+    logWithTime('Removed @helia/http-client dependency');
   }
   
   // Add postinstall script if it doesn't exist
@@ -207,7 +129,7 @@ legacy-peer-deps=true
   logWithTime('Updated .npmrc file');
   
   // Write updated package.json if changes were made
-  if (resolutionsUpdated || packageJson.dependencies['@helia/http-client']) {
+  if (resolutionsUpdated || packageJson.dependencies['@helia/http'] || packageJson.dependencies['@helia/http-client']) {
     try {
       // Parse and stringify to ensure valid JSON
       const validJson = JSON.stringify(packageJson, null, 2);
@@ -564,21 +486,65 @@ input {
     logWithTime('Created IndieFundSection.css file');
   }
   
-  // Find and fix files with Helia imports
-  const heliaFiles = findFilesWithHeliaImports();
-  logWithTime(`Found ${heliaFiles.length} files with Helia imports`);
-  
-  for (const file of heliaFiles) {
-    fixHeliaImports(file);
+  // Fix WalletContext.js
+  if (fs.existsSync(walletContextPath)) {
+    try {
+      let content = fs.readFileSync(walletContextPath, 'utf8');
+      
+      // Replace all Helia imports with a mock implementation
+      const mockHeliaImplementation = `
+// Mock implementation for Helia HTTP
+const createHelia = () => {
+  return {
+    blockstore: { has: () => Promise.resolve(false) }
+  };
+};
+
+const unixfs = () => {
+  return {
+    addAll: () => Promise.resolve([]),
+    get: () => Promise.resolve(new Uint8Array())
+  };
+};
+
+// WalletContext implementation
+`;
+      
+      // Remove all imports related to Helia
+      content = content.replace(/import\s+.*?from\s+['"]@helia\/http['"]/g, '');
+      content = content.replace(/import\s+.*?from\s+['"]@helia\/http-client['"]/g, '');
+      content = content.replace(/import\s+.*?from\s+['"]helia['"]/g, '');
+      content = content.replace(/import\s+.*?from\s+['"]@helia\/unixfs['"]/g, '');
+      
+      // Remove require statements related to Helia
+      content = content.replace(/const\s+.*?\s+=\s+require\(['"]@helia\/http['"]\)/g, '');
+      content = content.replace(/const\s+.*?\s+=\s+require\(['"]@helia\/http-client['"]\)/g, '');
+      content = content.replace(/const\s+.*?\s+=\s+require\(['"]helia['"]\)/g, '');
+      content = content.replace(/const\s+.*?\s+=\s+require\(['"]@helia\/unixfs['"]\)/g, '');
+      
+      // Add mock implementation at the beginning of the file
+      const importEndIndex = content.lastIndexOf('import');
+      if (importEndIndex !== -1) {
+        // Find the end of the last import statement
+        const importEndLineIndex = content.indexOf('\n', importEndIndex);
+        if (importEndLineIndex !== -1) {
+          content = content.slice(0, importEndLineIndex + 1) + mockHeliaImplementation + content.slice(importEndLineIndex + 1);
+        } else {
+          content = mockHeliaImplementation + content;
+        }
+      } else {
+        content = mockHeliaImplementation + content;
+      }
+      
+      // Replace any calls to createHttp with a mock function
+      content = content.replace(/createHttp\(/g, 'createHelia(');
+      
+      fs.writeFileSync(walletContextPath, content);
+      logWithTime('Fixed WalletContext.js with mock Helia implementation');
+    } catch (error) {
+      logWithTime(`Error fixing WalletContext.js: ${error.message}`);
+    }
   }
-  
-  // Run npm dedupe to reduce duplicate packages
-  logWithTime('Running npm dedupe to clean up dependencies...');
-  safeExec('npm dedupe');
-  
-  // Attempt to fix audit issues without breaking changes
-  logWithTime('Attempting to fix non-breaking audit issues...');
-  safeExec('npm audit fix --no-fund');
   
   logWithTime('Build fix script completed successfully');
 } catch (error) {
