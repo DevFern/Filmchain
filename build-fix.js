@@ -108,11 +108,24 @@ legacy-peer-deps=true
   logWithTime('Updated .npmrc file');
   
   // Write updated package.json if changes were made
-  if (resolutionsUpdated) {
-    fs.writeFileSync(packageJsonPath, JSON.stringify(packageJson, null, 2));
-    logWithTime('Updated package.json with vulnerability resolutions');
+if (resolutionsUpdated) {
+  try {
+    // Parse and stringify to ensure valid JSON
+    const validJson = JSON.stringify(packageJson, null, 2);
+    fs.writeFileSync(packageJsonPath, validJson);
+    logWithTime('Updated package.json with valid JSON format');
+  } catch (error) {
+    logWithTime(`Error creating valid JSON: ${error.message}`);
+    // Try to recover by using a more cautious approach
+    try {
+      const safeJson = JSON.parse(JSON.stringify(packageJson));
+      fs.writeFileSync(packageJsonPath, JSON.stringify(safeJson, null, 2));
+      logWithTime('Recovered and wrote package.json with safe JSON format');
+    } catch (recoveryError) {
+      logWithTime(`Failed to recover package.json: ${recoveryError.message}`);
+    }
   }
-  
+}
   // Check for and create vercel.json if it doesn't exist
   const vercelJsonPath = path.join(__dirname, 'vercel.json');
   if (!fs.existsSync(vercelJsonPath)) {
