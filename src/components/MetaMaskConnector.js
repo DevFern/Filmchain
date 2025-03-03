@@ -4,7 +4,6 @@ import React, { useState, useEffect } from 'react';
 const MetaMaskConnector = () => {
   const [account, setAccount] = useState(null);
   const [isMetaMaskInstalled, setIsMetaMaskInstalled] = useState(false);
-  const [status, setStatus] = useState('Checking for MetaMask...');
   const [isConnecting, setIsConnecting] = useState(false);
   const [error, setError] = useState(null);
 
@@ -14,7 +13,6 @@ const MetaMaskConnector = () => {
       if (window.ethereum && window.ethereum.isMetaMask) {
         console.log('MetaMask is installed!');
         setIsMetaMaskInstalled(true);
-        setStatus('MetaMask detected. Please connect your wallet.');
         
         // Check if already connected
         window.ethereum.request({ method: 'eth_accounts' })
@@ -22,7 +20,6 @@ const MetaMaskConnector = () => {
             if (accounts && accounts.length > 0) {
               console.log('Already connected to account:', accounts[0]);
               setAccount(accounts[0]);
-              setStatus('Connected to MetaMask!');
             }
           })
           .catch(err => {
@@ -34,17 +31,14 @@ const MetaMaskConnector = () => {
           if (accounts.length > 0) {
             console.log('Account changed to:', accounts[0]);
             setAccount(accounts[0]);
-            setStatus('Connected to MetaMask!');
           } else {
             console.log('Account disconnected');
             setAccount(null);
-            setStatus('MetaMask detected. Please connect your wallet.');
           }
         });
       } else {
         console.log('MetaMask is not installed');
         setIsMetaMaskInstalled(false);
-        setStatus('MetaMask is not installed.');
       }
     };
     
@@ -70,14 +64,12 @@ const MetaMaskConnector = () => {
       if (accounts && accounts.length > 0) {
         console.log('Connected to account:', accounts[0]);
         setAccount(accounts[0]);
-        setStatus('Connected to MetaMask!');
       } else {
         throw new Error('No accounts found');
       }
     } catch (err) {
       console.error('Error connecting to MetaMask:', err);
       setError(err.message || 'Failed to connect to MetaMask');
-      setStatus('Connection failed. Please try again.');
     } finally {
       setIsConnecting(false);
     }
@@ -86,15 +78,12 @@ const MetaMaskConnector = () => {
   // Disconnect from MetaMask
   const disconnectWallet = () => {
     setAccount(null);
-    setStatus('Disconnected. Please connect your wallet.');
   };
 
   // Render MetaMask installation prompt
   if (!isMetaMaskInstalled) {
     return (
-      <div className="metamask-container">
-        <h2>MetaMask Required</h2>
-        <p>To use this application, you need to install the MetaMask browser extension.</p>
+      <div className="metamask-header-container">
         <a 
           href="https://metamask.io/download.html" 
           target="_blank" 
@@ -108,13 +97,10 @@ const MetaMaskConnector = () => {
   }
 
   return (
-    <div className="metamask-container">
-      <h2>MetaMask Connection</h2>
-      <p className="status-message">{status}</p>
-      
+    <div className="metamask-header-container">
       {error && (
-        <div className="error-message">
-          <p>Error: {error}</p>
+        <div className="wallet-error-tooltip">
+          Error: {error}
         </div>
       )}
       
@@ -124,11 +110,11 @@ const MetaMaskConnector = () => {
           onClick={connectToMetaMask}
           disabled={isConnecting}
         >
-          {isConnecting ? 'Connecting...' : 'Connect to MetaMask'}
+          {isConnecting ? 'Connecting...' : 'Connect Wallet'}
         </button>
       ) : (
-        <div className="account-info">
-          <p>Connected Account: {account.substring(0, 6)}...{account.substring(account.length - 4)}</p>
+        <div className="wallet-address">
+          {account.substring(0, 6)}...{account.substring(account.length - 4)}
           <button 
             className="disconnect-button"
             onClick={disconnectWallet}
