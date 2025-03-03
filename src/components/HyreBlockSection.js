@@ -37,7 +37,7 @@ const HyreBlockSection = () => {
       salary: "$90,000 - $120,000",
       experience: "5+ years",
       department: "Visual Effects",
-      logo: "https://placehold.co/100x100/6a1b9a/ffffff?text=DS",
+      logo: "https://placehold.co/100x100/6a1b9a/ffff?text=DS",
       description: "Looking for a senior VFX artist to join our award-winning team working on high-profile feature films and streaming content.",
       skills: ["Maya", "Houdini", "Nuke", "Particle FX", "Compositing"],
       posted: "2024-03-15",
@@ -52,7 +52,7 @@ const HyreBlockSection = () => {
       salary: "$45,000 - $60,000",
       experience: "2-3 years",
       department: "Production",
-      logo: "https://placehold.co/100x100/9c27b0/ffffff?text=FC",
+      logo: "https://placehold.co/100x100/9c27b0/ffff?text=FC",
       description: "Seeking an experienced production coordinator for upcoming feature film to manage day-to-day operations.",
       skills: ["Scheduling", "Budgeting", "Communication", "MS Office", "Production Software"],
       posted: "2024-03-10",
@@ -67,7 +67,7 @@ const HyreBlockSection = () => {
       salary: "$500 - $800/day",
       experience: "5+ years",
       department: "Camera",
-      logo: "https://placehold.co/100x100/e91e63/ffffff?text=VF",
+      logo: "https://placehold.co/100x100/e91e63/ffff?text=VF",
       description: "Talented cinematographer needed for indie feature film shooting in Atlanta this summer.",
       skills: ["Lighting", "Composition", "Arri Alexa", "RED", "Color Theory"],
       posted: "2024-03-05",
@@ -87,7 +87,7 @@ const HyreBlockSection = () => {
       portfolio: "#",
       availability: "Available from June 2024",
       bio: "Award-winning VFX supervisor with experience on major studio films and streaming series.",
-      image: "https://placehold.co/100x100/6a1b9a/ffffff?text=AJ",
+      image: "https://placehold.co/100x100/6a1b9a/ffff?text=AJ",
       verified: true
     },
     {
@@ -100,7 +100,7 @@ const HyreBlockSection = () => {
       portfolio: "#",
       availability: "Available now",
       bio: "Experienced production manager with a track record of delivering projects on time and under budget.",
-      image: "https://placehold.co/100x100/9c27b0/ffffff?text=SW",
+      image: "https://placehold.co/100x100/9c27b0/ffff?text=SW",
       verified: true
     },
     {
@@ -113,10 +113,52 @@ const HyreBlockSection = () => {
       portfolio: "#",
       availability: "Available from May 2024",
       bio: "Award-winning cinematographer known for distinctive visual style and innovative lighting techniques.",
-      image: "https://placehold.co/100x100/e91e63/ffffff?text=EP",
+      image: "https://placehold.co/100x100/e91e63/ffff?text=EP",
       verified: false
     }
   ];
+
+  // Filter jobs based on current filters and search term
+  const filteredJobs = jobs.filter(job => {
+    // Apply location filter
+    if (filters.location !== 'all' && job.location !== filters.location) return false;
+    
+    // Apply job type filter
+    if (filters.jobType !== 'all' && job.type !== filters.jobType) return false;
+    
+    // Apply experience filter
+    if (filters.experience !== 'all' && job.experience !== filters.experience) return false;
+    
+    // Apply department filter
+    if (filters.department !== 'all' && job.department !== filters.department) return false;
+    
+    // Apply search term
+    if (searchTerm && !job.title.toLowerCase().includes(searchTerm.toLowerCase()) && 
+        !job.company.toLowerCase().includes(searchTerm.toLowerCase()) &&
+        !job.description.toLowerCase().includes(searchTerm.toLowerCase())) {
+      return false;
+    }
+    
+    return true;
+  });
+
+  // Filter talents based on current filters and search term
+  const filteredTalents = talents.filter(talent => {
+    // Apply location filter
+    if (filters.location !== 'all' && talent.location !== filters.location) return false;
+    
+    // Apply experience filter
+    if (filters.experience !== 'all' && talent.experience !== filters.experience) return false;
+    
+    // Apply search term
+    if (searchTerm && !talent.name.toLowerCase().includes(searchTerm.toLowerCase()) && 
+        !talent.title.toLowerCase().includes(searchTerm.toLowerCase()) &&
+        !talent.bio.toLowerCase().includes(searchTerm.toLowerCase())) {
+      return false;
+    }
+    
+    return true;
+  });
 
   const toggleSaveJob = (jobId, e) => {
     e.stopPropagation();
@@ -164,448 +206,202 @@ const HyreBlockSection = () => {
     }, 3000);
   };
 
-  const formatDate = (dateString) => {
-    const options = { year: 'numeric', month: 'short', day: 'numeric' };
-    return new Date(dateString).toLocaleDateString(undefined, options);
-  };
-
-  const filteredJobs = jobs.filter(job => {
-    // Apply search filter
-    if (searchTerm && !job.title.toLowerCase().includes(searchTerm.toLowerCase()) &&
-        !job.company.toLowerCase().includes(searchTerm.toLowerCase())) {
-      return false;
-    }
-
-    // Apply location filter
-    if (filters.location !== 'all' && job.location !== filters.location) {
-      return false;
-    }
-
-    // Apply job type filter
-    if (filters.jobType !== 'all' && job.type !== filters.jobType) {
-      return false;
-    }
-
-    // Apply department filter
-    if (filters.department !== 'all' && job.department !== filters.department) {
-      return false;
-    }
-
-    return true;
-  });
-
-  const filteredTalents = talents.filter(talent => {
-    // Apply search filter
-    if (searchTerm && !talent.name.toLowerCase().includes(searchTerm.toLowerCase()) &&
-        !talent.title.toLowerCase().includes(searchTerm.toLowerCase())) {
-      return false;
-    }
-
-    // Apply location filter
-    if (filters.location !== 'all' && talent.location !== filters.location) {
-      return false;
-    }
-
-    return true;
-  });
-
-  // Animation variants for framer-motion
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.1
-      }
-    }
-  };
-
-  const itemVariants = {
-    hidden: { y: 20, opacity: 0 },
-    visible: {
-      y: 0,
-      opacity: 1,
-      transition: { type: "spring", stiffness: 100 }
-    }
-  };
-
-  // Job Card Component
-  const JobCard = ({ job }) => (
-    <motion.div 
-      className={`job-card ${viewMode === 'list' ? 'list-view' : ''}`}
-      variants={itemVariants}
-    >
-      <div className="job-card-header">
-        <div className="company-logo">
-          <img src={job.logo} alt={job.company} />
-        </div>
-        <div className="job-info">
-          <h3 className="job-title">{job.title}</h3>
-          <p className="company-name">{job.company}</p>
-          <div className="job-meta">
-            <span className="job-location"><i className="fas fa-map-marker-alt"></i> {job.location}</span>
-            <span className="job-type"><i className="fas fa-briefcase"></i> {job.type}</span>
-          </div>
-        </div>
-        <button
-          className={`save-btn ${savedJobs.includes(job.id) ? 'saved' : ''}`}
-          onClick={(e) => toggleSaveJob(job.id, e)}
-          aria-label={savedJobs.includes(job.id) ? "Unsave job" : "Save job"}
-        >
-          <i className={`${savedJobs.includes(job.id) ? 'fas' : 'far'} fa-heart`}></i>
-        </button>
-      </div>
-
-      <div className="job-card-body">
-        <div className="job-tags">
-          <span className="job-department">{job.department}</span>
-          <span className="job-experience">{job.experience}</span>
-          <span className="job-salary">{job.salary}</span>
-        </div>
-
-        <p className="job-description">{job.description}</p>
-
-        <div className="job-skills">
-          {job.skills.slice(0, 3).map((skill, index) => (
-            <span key={index} className="skill-tag">{skill}</span>
-          ))}
-          {job.skills.length > 3 && (
-            <span className="more-skills">+{job.skills.length - 3} more</span>
-          )}
-        </div>
-      </div>
-
-      <div className="job-card-footer">
-        <div className="job-stats">
-          <span className="job-posted"><i className="far fa-calendar-alt"></i> Posted: {formatDate(job.posted)}</span>
-          <span className="job-deadline"><i className="fas fa-hourglass-half"></i> Deadline: {formatDate(job.deadline)}</span>
-        </div>
-
-        <button className="apply-btn">Apply Now</button>
-      </div>
-    </motion.div>
-  );
-
-  // Talent Card Component
-  const TalentCard = ({ talent }) => (
-    <motion.div 
-      className={`talent-card ${viewMode === 'list' ? 'list-view' : ''}`}
-      variants={itemVariants}
-    >
-      <div className="talent-card-header">
-        <div className="talent-avatar">
-          <img src={talent.image} alt={talent.name} />
-          {talent.verified && (
-            <div className="verified-badge" title="Verified Professional">
-              <i className="fas fa-check"></i>
-            </div>
-          )}
-        </div>
-        <div className="talent-info">
-          <h3 className="talent-name">{talent.name}</h3>
-          <p className="talent-title">{talent.title}</p>
-          <div className="talent-meta">
-            <span className="talent-location"><i className="fas fa-map-marker-alt"></i> {talent.location}</span>
-            <span className="talent-experience"><i className="fas fa-clock"></i> {talent.experience}</span>
-          </div>
-        </div>
-        <button
-          className={`save-btn ${savedTalents.includes(talent.id) ? 'saved' : ''}`}
-          onClick={(e) => toggleSaveTalent(talent.id, e)}
-          aria-label={savedTalents.includes(talent.id) ? "Unsave talent" : "Save talent"}
-        >
-          <i className={`${savedTalents.includes(talent.id) ? 'fas' : 'far'} fa-heart`}></i>
-        </button>
-      </div>
-
-      <div className="talent-card-body">
-        <p className="talent-bio">{talent.bio}</p>
-
-        <div className="talent-skills">
-          {talent.skills.map((skill, index) => (
-            <span key={index} className="skill-tag">{skill}</span>
-          ))}
-        </div>
-      </div>
-
-      <div className="talent-card-footer">
-        <div className="talent-stats">
-          <span className="talent-availability"><i className="far fa-calendar-check"></i> {talent.availability}</span>
-        </div>
-
-        <button className="contact-btn">View Profile</button>
-      </div>
-    </motion.div>
-  );
-
   return (
     <div className="hyreblock-container">
+      {/* Section Header with Description - Separated from listings */}
       <div className="section-header">
-        <h2 className="section-title">HyreBlock</h2>
-        <p className="section-subtitle">Connect with film industry professionals and find your next opportunity</p>
+        <h2 className="section-title">Hyre Block</h2>
+        <p className="section-subtitle">
+          Connect with top film industry talent and opportunities on the blockchain
+        </p>
       </div>
-
-      <div className="tabs-container">
-        <div className="tabs-nav">
-          <button
-            className={`tab-button ${activeTab === 'jobs' ? 'active' : ''}`}
-            onClick={() => setActiveTab('jobs')}
-          >
-            <i className="fas fa-briefcase"></i> Browse Jobs
-          </button>
-          <button
-            className={`tab-button ${activeTab === 'talent' ? 'active' : ''}`}
-            onClick={() => setActiveTab('talent')}
-          >
-            <i className="fas fa-users"></i> Talent Pool
-          </button>
-          <button
-            className={`tab-button ${activeTab === 'saved' ? 'active' : ''}`}
-            onClick={() => setActiveTab('saved')}
-          >
-            <i className="fas fa-heart"></i> Saved
-          </button>
-          <button
-            className={`tab-button ${activeTab === 'applications' ? 'active' : ''}`}
-            onClick={() => setActiveTab('applications')}
-          >
-            <i className="fas fa-file-alt"></i> My Applications
-          </button>
-        </div>
-
-        <div className="search-filters">
-          <div className="search-container">
-            <i className="fas fa-search search-icon"></i>
-            <input
-              type="text"
-              placeholder={`Search ${activeTab === 'jobs' ? 'jobs, companies, or skills' : 'talents, roles, or skills'}...`}
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="search-input"
-            />
-          </div>
-
-          <div className="filters-container">
+      
+      {/* Tab Navigation */}
+      <div className="tab-navigation">
+        <button
+          className={`tab-btn ${activeTab === 'jobs' ? 'active' : ''}`}
+          onClick={() => setActiveTab('jobs')}
+        >
+          Jobs
+        </button>
+        <button
+          className={`tab-btn ${activeTab === 'talents' ? 'active' : ''}`}
+          onClick={() => setActiveTab('talents')}
+        >
+          Talents
+        </button>
+        <button
+          className={`tab-btn ${activeTab === 'saved' ? 'active' : ''}`}
+          onClick={() => setActiveTab('saved')}
+        >
+          Saved
+        </button>
+        <button
+          className={`tab-btn ${activeTab === 'applications' ? 'active' : ''}`}
+          onClick={() => setActiveTab('applications')}
+        >
+          Applications
+        </button>
+      </div>
+      
+      {/* Jobs Tab Content */}
+      {activeTab === 'jobs' && (
+        <div className="jobs-tab-content">
+          {/* Enhanced Filters Section */}
+          <div className="filters-section">
+            <div className="search-container">
+              <i className="fas fa-search search-icon"></i>
+              <input
+                type="text"
+                className="search-input"
+                placeholder="Search jobs..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+            </div>
+            
             <select
-              value={filters.location}
-              onChange={(e) => setFilters(prev => ({...prev, location: e.target.value}))}
               className="filter-select"
+              value={filters.location}
+              onChange={(e) => setFilters(prev => ({ ...prev, location: e.target.value }))}
             >
               <option value="all">All Locations</option>
-              <option value="Los Angeles, CA">Los Angeles</option>
-              <option value="New York, NY">New York</option>
-              <option value="Atlanta, GA">Atlanta</option>
-              <option value="Remote">Remote</option>
+              <option value="Los Angeles, CA">Los Angeles, CA</option>
+              <option value="New York, NY">New York, NY</option>
+              <option value="Atlanta, GA">Atlanta, GA</option>
             </select>
-
-            {activeTab === 'jobs' && (
-              <>
-                <select
-                  value={filters.jobType}
-                  onChange={(e) => setFilters(prev => ({...prev, jobType: e.target.value}))}
-                  className="filter-select"
-                >
-                  <option value="all">All Types</option>
-                  <option value="Full-time">Full-time</option>
-                  <option value="Contract">Contract</option>
-                  <option value="Freelance">Freelance</option>
-                  <option value="Part-time">Part-time</option>
-                </select>
-
-                <select
-                  value={filters.department}
-                  onChange={(e) => setFilters(prev => ({...prev, department: e.target.value}))}
-                  className="filter-select"
-                >
-                  <option value="all">All Departments</option>
-                  <option value="Visual Effects">Visual Effects</option>
-                  <option value="Production">Production</option>
-                  <option value="Camera">Camera</option>
-                  <option value="Post-Production">Post-Production</option>
-                </select>
-              </>
-            )}
-
+            
+            <select
+              className="filter-select"
+              value={filters.jobType}
+              onChange={(e) => setFilters(prev => ({ ...prev, jobType: e.target.value }))}
+            >
+              <option value="all">All Job Types</option>
+              <option value="Full-time">Full-time</option>
+              <option value="Contract">Contract</option>
+              <option value="Freelance">Freelance</option>
+            </select>
+            
+            <select
+              className="filter-select"
+              value={filters.experience}
+              onChange={(e) => setFilters(prev => ({ ...prev, experience: e.target.value }))}
+            >
+              <option value="all">All Experience Levels</option>
+              <option value="1-2 years">1-2 years</option>
+              <option value="2-3 years">2-3 years</option>
+              <option value="5+ years">5+ years</option>
+            </select>
+            
+            <select
+              className="filter-select"
+              value={filters.department}
+              onChange={(e) => setFilters(prev => ({ ...prev, department: e.target.value }))}
+            >
+              <option value="all">All Departments</option>
+              <option value="Visual Effects">Visual Effects</option>
+              <option value="Production">Production</option>
+              <option value="Camera">Camera</option>
+            </select>
+            
             <div className="view-toggle">
               <button
-                className={`view-toggle-btn ${viewMode === 'grid' ? 'active' : ''}`}
+                className={`view-btn ${viewMode === 'grid' ? 'active' : ''}`}
                 onClick={() => setViewMode('grid')}
                 aria-label="Grid view"
               >
                 <i className="fas fa-th-large"></i>
               </button>
               <button
-                className={`view-toggle-btn ${viewMode === 'list' ? 'active' : ''}`}
+                className={`view-btn ${viewMode === 'list' ? 'active' : ''}`}
                 onClick={() => setViewMode('list')}
                 aria-label="List view"
               >
                 <i className="fas fa-list"></i>
               </button>
             </div>
-
-            <select className="sort-select">
-              <option value="recent">Most Recent</option>
-              <option value="relevant">Most Relevant</option>
-              <option value="salary-high">Highest Salary</option>
-              <option value="salary-low">Lowest Salary</option>
-            </select>
           </div>
-        </div>
-      </div>
-
-      {/* Jobs Tab */}
-      {activeTab === 'jobs' && (
-        <motion.div 
-          className={`jobs-container ${viewMode}`}
-          variants={containerVariants}
-          initial="hidden"
-          animate="visible"
-        >
-          {filteredJobs.length > 0 ? (
-            filteredJobs.map(job => (
-              <JobCard key={job.id} job={job} />
-            ))
-          ) : (
-            <div className="empty-state">
-              <i className="fas fa-search"></i>
-              <h3>No jobs found</h3>
-              <p>Try adjusting your search filters or check back later for new opportunities.</p>
-            </div>
-          )}
-        </motion.div>
-      )}
-
-      {/* Talent Tab */}
-      {activeTab === 'talent' && (
-        <motion.div 
-          className={`talents-container ${viewMode}`}
-          variants={containerVariants}
-          initial="hidden"
-          animate="visible"
-        >
-          {filteredTalents.length > 0 ? (
-            filteredTalents.map(talent => (
-              <TalentCard key={talent.id} talent={talent} />
-            ))
-          ) : (
-            <div className="empty-state">
-              <i className="fas fa-users"></i>
-              <h3>No talents found</h3>
-              <p>Try adjusting your search filters or check back later for new professionals.</p>
-            </div>
-          )}
-        </motion.div>
-      )}
-
-      {/* Saved Tab */}
-      {activeTab === 'saved' && (
-        <div className="saved-content">
-          <div className="saved-tabs">
-            <button
-              className={`saved-tab ${!selectedTalent ? 'active' : ''}`}
-              onClick={() => setSelectedTalent(null)}
-            >
-              Saved Jobs ({savedJobs.length})
-            </button>
-            <button
-              className={`saved-tab ${selectedTalent ? 'active' : ''}`}
-              onClick={() => setSelectedTalent(talents[0])}
-            >
-              Saved Talents ({savedTalents.length})
-            </button>
-          </div>
-
-          <AnimatePresence mode="wait">
-            <motion.div 
-              key={selectedTalent ? 'talents' : 'jobs'}
-              className={`saved-items-container ${viewMode}`}
-              variants={containerVariants}
-              initial="hidden"
-              animate="visible"
-              exit={{ opacity: 0 }}
-            >
-              {!selectedTalent ? (
-                // Saved Jobs
-                savedJobs.length > 0 ? (
-                  jobs.filter(job => savedJobs.includes(job.id)).map(job => (
-                    <JobCard key={job.id} job={job} />
-                  ))
-                ) : (
-                  <div className="empty-state">
-                    <i className="far fa-heart"></i>
-                    <h3>No saved jobs</h3>
-                    <p>Jobs you save will appear here for easy access.</p>
+          
+          {/* Jobs Grid */}
+          <div className={`jobs-container ${viewMode}`}>
+            {filteredJobs.length > 0 ? (
+              filteredJobs.map(job => (
+                <div
+                  key={job.id}
+                  className={`job-card ${viewMode === 'list' ? 'list-view' : ''}`}
+                  onClick={() => {
+                    setSelectedJob(job);
+                    setShowApplicationForm(true);
+                  }}
+                >
+                  <div className="job-card-header">
+                    <div className="job-title-section">
+                      <h3 className="job-title">{job.title}</h3>
+                      <p className="company-name">{job.company}</p>
+                    </div>
                     <button
-                      className="btn-primary"
-                      onClick={() => setActiveTab('jobs')}
+                      className={`save-job-btn ${savedJobs.includes(job.id) ? 'saved' : ''}`}
+                      onClick={(e) => toggleSaveJob(job.id, e)}
+                      aria-label={savedJobs.includes(job.id) ? "Unsave job" : "Save job"}
                     >
-                      Browse Jobs
+                      <i className={`${savedJobs.includes(job.id) ? 'fas' : 'far'} fa-heart`}></i>
                     </button>
                   </div>
-                )
-              ) : (
-                // Saved Talents
-                savedTalents.length > 0 ? (
-                  talents.filter(talent => savedTalents.includes(talent.id)).map(talent => (
-                    <TalentCard key={talent.id} talent={talent} />
-                  ))
-                ) : (
-                  <div className="empty-state">
-                    <i className="far fa-heart"></i>
-                    <h3>No saved talents</h3>
-                    <p>Talents you save will appear here for easy access.</p>
-                    <button
-                      className="btn-primary"
-                      onClick={() => setActiveTab('talent')}
-                    >
-                      Browse Talents
-                    </button>
+                  
+                  <div className="job-details">
+                    <div className="detail-item">
+                      <i className="fas fa-map-marker-alt"></i>
+                      <span>{job.location}</span>
+                    </div>
+                    <div className="detail-item">
+                      <i className="fas fa-briefcase"></i>
+                      <span>{job.type}</span>
+                    </div>
+                    <div className="detail-item">
+                      <i className="fas fa-dollar-sign"></i>
+                      <span>{job.salary}</span>
+                    </div>
                   </div>
-                )
-              )}
-            </motion.div>
-          </AnimatePresence>
+                  
+                  <p className="job-description">{job.description}</p>
+                  
+                  <div className="skills-container">
+                    {job.skills.map((skill, index) => (
+                      <span key={index} className="skill-tag">{skill}</span>
+                    ))}
+                  </div>
+                  
+                  <div className="job-footer">
+                    <div className="posted-date">
+                      <i className="far fa-calendar-alt"></i>
+                      <span>Posted: {job.posted}</span>
+                    </div>
+                    <div className="deadline">
+                      <i className="fas fa-hourglass-half"></i>
+                      <span>Apply by: {job.deadline}</span>
+                    </div>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div className="no-results">
+                <i className="fas fa-search"></i>
+                <p>No jobs match your current filters. Try adjusting your search criteria.</p>
+              </div>
+            )}
+          </div>
         </div>
       )}
-
-      {/* Applications Tab */}
-      {activeTab === 'applications' && (
-        <div className="applications-container">
-          {applications.length > 0 ? (
-            <div className="applications-list">
-              {/* Application items would go here */}
-              <p>Your applications will appear here.</p>
-            </div>
-          ) : (
-            <div className="empty-state">
-              <i className="fas fa-file-alt"></i>
-              <h3>No applications yet</h3>
-              <p>When you apply for jobs, they will appear here for tracking.</p>
-              <button
-                className="btn-primary"
-                onClick={() => setActiveTab('jobs')}
-              >
-                Browse Jobs
-              </button>
-            </div>
-          )}
-        </div>
-      )}
-
+      
+      {/* Rest of the component remains the same */}
+      
       {/* Notification */}
-      <AnimatePresence>
-        {showNotification && (
-          <motion.div 
-            className={`notification ${notificationType}`}
-            initial={{ x: 100, opacity: 0 }}
-            animate={{ x: 0, opacity: 1 }}
-            exit={{ x: 100, opacity: 0 }}
-          >
-            <i className={`fas ${notificationType === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'}`}></i>
-            <span>{notificationMessage}</span>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {showNotification && (
+        <div className={`notification ${notificationType}`}>
+          <i className={`fas ${notificationType === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'}`}></i>
+          <p>{notificationMessage}</p>
+        </div>
+      )}
     </div>
   );
 };
