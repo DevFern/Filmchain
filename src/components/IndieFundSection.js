@@ -7,504 +7,276 @@ const IndieFundSection = () => {
   const [projects, setProjects] = useState([
     {
       id: 1,
-      title: "The Last Symphony",
-      director: "Maria Chen",
-      genre: "Drama",
-      currentFunding: 250000,
-      fundingGoal: 500000,
-      image: "https://i.ibb.co/VpHHLnYM/Last-Symphony.jpg",
-      description: "A touching story about a deaf musician's journey to compose her final masterpiece. Set against the backdrop of 1950s Paris, this emotional drama explores themes of perseverance, artistic expression, and finding one's voice in a world of silence.",
-      deadline: "2024-12-31",
-      milestones: [
-        { title: "Pre-production", description: "Script finalization and crew hiring", date: "2024-06-01", completed: true },
-        { title: "Production", description: "Principal photography", date: "2024-08-01", completed: false },
-        { title: "Post-production", description: "Editing and sound design", date: "2024-10-01", completed: false },
-        { title: "Release", description: "Festival circuit and theatrical release", date: "2024-12-01", completed: false }
-      ],
+      title: "The Last Horizon",
+      director: "Maria Rodriguez",
+      genre: "Sci-Fi Drama",
+      description: "A thought-provoking exploration of humanity's future as Earth becomes uninhabitable and a team of scientists searches for a new home among the stars.",
+      image: "https://placehold.co/600x400/6a11cb/ffff?text=The+Last+Horizon",
+      fundingGoal: 250000,
+      fundingRaised: 175000,
+      deadline: "2024-06-30",
+      investors: 128,
       updates: [
-        { id: 1, title: "Director Announcement", content: "We're thrilled to announce Maria Chen as our director! With her background in musical composition and award-winning short films, Maria brings a unique perspective to this emotional story.", date: "2024-02-15", expanded: false },
-        { id: 2, title: "Casting Complete", content: "After an extensive search, we've finalized our main cast. Award-winning actress Sophia Laurent will play our lead, with supporting roles filled by James Wilson and Elena Petrov.", date: "2024-03-01", expanded: false }
+        { title: "Principal Photography Complete", date: "2024-03-01", content: "We've wrapped principal photography and are moving into post-production. Thanks to all our investors for making this possible!" },
+        { title: "VFX Team Assembled", date: "2024-02-15", content: "We've partnered with Stellar VFX to bring our vision to life with cutting-edge visual effects." }
+      ],
+      timeline: [
+        { title: "Development", description: "Script finalization and pre-production planning", date: "2023-12-15", completed: true },
+        { title: "Pre-Production", description: "Casting, location scouting, and crew assembly", date: "2024-01-30", completed: true },
+        { title: "Production", description: "Principal photography", date: "2024-03-01", completed: true },
+        { title: "Post-Production", description: "Editing, VFX, sound design, and color grading", date: "2024-07-15", completed: false },
+        { title: "Distribution", description: "Festival submissions and distribution deals", date: "2024-10-01", completed: false }
       ],
       team: [
-        { name: "Maria Chen", role: "Director", image: "https://i.ibb.co/kGjhMX8/director1.jpg" },
-        { name: "Thomas Wright", role: "Producer", image: "https://i.ibb.co/kGjhMX8/producer1.jpg" },
-        { name: "Sophia Laurent", role: "Lead Actress", image: "https://i.ibb.co/kGjhMX8/actress1.jpg" }
-      ]
+        { name: "Maria Rodriguez", role: "Director", bio: "Award-winning director known for visually stunning narratives", image: "https://placehold.co/100x100/6a11cb/ffff?text=MR" },
+        { name: "James Chen", role: "Producer", bio: "Experienced producer with a track record of successful indie films", image: "https://placehold.co/100x100/6a11cb/ffff?text=JC" },
+        { name: "Sophia Patel", role: "Cinematographer", bio: "Innovative DP known for creating immersive visual experiences", image: "https://placehold.co/100x100/6a11cb/ffff?text=SP" }
+      ],
+      projectedReturn: "15-20%",
+      category: "Feature Film"
     },
     {
       id: 2,
-      title: "Quantum Dreams",
-      director: "James Wilson",
-      genre: "Sci-Fi",
-      currentFunding: 800000,
-      fundingGoal: 1200000,
-      image: "https://i.ibb.co/d4zkmt45/Quantum-Dreams.jpg",
-      description: "A mind-bending journey through parallel universes and quantum realities. When physicist Dr. Alex Mercer discovers a way to access alternate dimensions, he finds himself caught in a web of different versions of his own life, forcing him to confront the consequences of choices he never made.",
-      deadline: "2024-11-30",
-      milestones: [
-        { title: "Pre-production", description: "VFX planning and storyboards", date: "2024-05-01", completed: true },
-        { title: "Production", description: "Principal photography", date: "2024-07-01", completed: false },
-        { title: "Post-production", description: "VFX and sound design", date: "2024-09-01", completed: false },
-        { title: "Release", description: "Theatrical release", date: "2024-11-01", completed: false }
-      ],
+      title: "Echoes of Tomorrow",
+      director: "David Kim",
+      genre: "Documentary",
+      description: "An intimate look at how emerging technologies are reshaping communities around the world, told through the stories of innovators and everyday people.",
+      image: "https://placehold.co/600x400/2575fc/ffff?text=Echoes+of+Tomorrow",
+      fundingGoal: 120000,
+      fundingRaised: 85000,
+      deadline: "2024-05-15",
+      investors: 76,
       updates: [
-        { id: 1, title: "VFX Team Assembled", content: "We've brought together a team of visual effects artists from major studios including veterans who worked on 'Inception' and 'Interstellar'.", date: "2024-02-20", expanded: false },
-        { id: 2, title: "Location Scouting", content: "Our team has secured filming locations in Tokyo, Japan for the futuristic scenes. The neon-lit streets and advanced architecture provide the perfect backdrop for our quantum reality sequences.", date: "2024-03-10", expanded: false }
+        { title: "International Filming Complete", date: "2024-02-28", content: "We've finished filming in Tokyo, Lagos, and San Francisco, capturing diverse perspectives on technological change." }
+      ],
+      timeline: [
+        { title: "Research", description: "Subject identification and story development", date: "2023-11-01", completed: true },
+        { title: "Production", description: "International filming and interviews", date: "2024-02-28", completed: true },
+        { title: "Post-Production", description: "Editing and sound design", date: "2024-06-15", completed: false },
+        { title: "Release", description: "Festival circuit and streaming release", date: "2024-09-01", completed: false }
       ],
       team: [
-        { name: "James Wilson", role: "Director", image: "https://i.ibb.co/kGjhMX8/director2.jpg" },
-        { name: "Sarah Johnson", role: "VFX Supervisor", image: "https://i.ibb.co/kGjhMX8/vfx1.jpg" },
-        { name: "Michael Chen", role: "Lead Actor", image: "https://i.ibb.co/kGjhMX8/actor1.jpg" }
-      ]
+        { name: "David Kim", role: "Director", bio: "Documentary filmmaker focused on social impact stories", image: "https://placehold.co/100x100/2575fc/ffff?text=DK" },
+        { name: "Aisha Johnson", role: "Producer", bio: "Producer specializing in documentary and non-fiction content", image: "https://placehold.co/100x100/2575fc/ffff?text=AJ" }
+      ],
+      projectedReturn: "10-15%",
+      category: "Documentary"
     },
     {
       id: 3,
-      title: "Echoes of Tomorrow",
-      director: "Elena Petrov",
-      genre: "Thriller",
-      currentFunding: 350000,
-      fundingGoal: 700000,
-      image: "https://i.ibb.co/RT0vfKzb/The-Last-Sunset.jpg",
-      description: "In a near-future society where memories can be digitally stored and traded, a memory detective uncovers a conspiracy that threatens to destabilize the entire system. As she delves deeper, she discovers her own memories may have been altered.",
-      deadline: "2025-01-15",
-      milestones: [
-        { title: "Script Development", description: "Finalizing screenplay", date: "2024-06-15", completed: true },
-        { title: "Pre-production", description: "Casting and location scouting", date: "2024-08-15", completed: false },
-        { title: "Production", description: "Principal photography", date: "2024-10-15", completed: false },
-        { title: "Post-production", description: "Editing and sound design", date: "2024-12-15", completed: false }
-      ],
+      title: "Midnight Melody",
+      director: "Thomas Wright",
+      genre: "Musical Drama",
+      description: "A passionate tale of a jazz pianist and a classical violinist who find harmony in their contrasting worlds, set against the backdrop of New Orleans' vibrant music scene.",
+      image: "https://placehold.co/600x400/e91e63/ffff?text=Midnight+Melody",
+      fundingGoal: 180000,
+      fundingRaised: 45000,
+      deadline: "2024-07-20",
+      investors: 32,
       updates: [
-        { id: 1, title: "Script Completed", content: "Award-winning screenwriter David Mercer has completed the final draft of the screenplay, which has already garnered attention from several major production companies.", date: "2024-03-05", expanded: false }
+        { title: "Soundtrack Production Begins", date: "2024-03-10", content: "Grammy-winning composer Marcus Johnson has joined the team to create our original soundtrack." }
+      ],
+      timeline: [
+        { title: "Development", description: "Script and music composition", date: "2024-01-15", completed: true },
+        { title: "Pre-Production", description: "Casting and location scouting", date: "2024-04-01", completed: false },
+        { title: "Production", description: "Filming in New Orleans", date: "2024-08-15", completed: false },
+        { title: "Post-Production", description: "Editing and sound mixing", date: "2024-11-01", completed: false }
       ],
       team: [
-        { name: "Elena Petrov", role: "Director", image: "https://i.ibb.co/kGjhMX8/director3.jpg" },
-        { name: "David Mercer", role: "Screenwriter", image: "https://i.ibb.co/kGjhMX8/writer1.jpg" }
-      ]
+        { name: "Thomas Wright", role: "Director", bio: "Director with background in music videos and performance films", image: "https://placehold.co/100x100/e91e63/ffff?text=TW" },
+        { name: "Elena Diaz", role: "Music Director", bio: "Composer and music producer with experience in film scoring", image: "https://placehold.co/100x100/e91e63/ffff?text=ED" }
+      ],
+      projectedReturn: "12-18%",
+      category: "Feature Film"
     }
   ]);
 
   const [selectedProject, setSelectedProject] = useState(null);
-  const [activePhase, setActivePhase] = useState(0);
-  const [investmentAmount, setInvestmentAmount] = useState(0);
-  const [projectedReturn, setProjectedReturn] = useState(null);
-  const [isInvesting, setIsInvesting] = useState(false);
-  const [error, setError] = useState(null);
+  const [showProjectModal, setShowProjectModal] = useState(false);
   const [activeTab, setActiveTab] = useState('overview');
-  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [investmentAmount, setInvestmentAmount] = useState('');
+  const [calculatedReturn, setCalculatedReturn] = useState(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState(null);
+  const [filters, setFilters] = useState({
+    category: 'all',
+    fundingStatus: 'all',
+    genre: 'all'
+  });
+  const [searchTerm, setSearchTerm] = useState('');
 
-  const calculateReturns = () => {
-    if (!investmentAmount || investmentAmount <= 0) {
+  // Filter projects based on current filters and search term
+  const filteredProjects = projects.filter(project => {
+    // Apply category filter
+    if (filters.category !== 'all' && project.category !== filters.category) return false;
+    
+    // Apply funding status filter
+    if (filters.fundingStatus === 'funded' && project.fundingRaised < project.fundingGoal) return false;
+    if (filters.fundingStatus === 'in-progress' && project.fundingRaised >= project.fundingGoal) return false;
+    
+    // Apply genre filter
+    if (filters.genre !== 'all' && project.genre !== filters.genre) return false;
+    
+    // Apply search term
+    if (searchTerm && !project.title.toLowerCase().includes(searchTerm.toLowerCase()) && 
+        !project.director.toLowerCase().includes(searchTerm.toLowerCase()) &&
+        !project.description.toLowerCase().includes(searchTerm.toLowerCase())) {
+      return false;
+    }
+    
+    return true;
+  });
+
+  const calculateReturn = () => {
+    if (!investmentAmount || isNaN(investmentAmount) || investmentAmount <= 0) {
       setError("Please enter a valid investment amount");
       return;
     }
     
-    // Simple ROI calculation - in a real app this would be more sophisticated
-    const projectedReturn = investmentAmount * 1.5;
-    setProjectedReturn(projectedReturn);
+    // Simple calculation for demonstration purposes
+    // In a real app, this would be more complex based on the project's financial model
+    const amount = parseFloat(investmentAmount);
+    const projectedReturnRate = selectedProject.projectedReturn.split('-').map(rate => parseFloat(rate.replace('%', '')) / 100);
+    const minReturn = amount * (1 + projectedReturnRate[0]);
+    const maxReturn = amount * (1 + projectedReturnRate[1]);
+    
+    setCalculatedReturn({
+      min: minReturn.toFixed(2),
+      max: maxReturn.toFixed(2)
+    });
+    
     setError(null);
   };
 
-  const handleInvest = async (projectId) => {
+  const handleInvest = async () => {
     if (!account) {
       setError("Please connect your wallet first");
       return;
     }
-
-    if (!investmentAmount || investmentAmount <= 0) {
+    
+    if (!investmentAmount || isNaN(investmentAmount) || investmentAmount <= 0) {
       setError("Please enter a valid investment amount");
       return;
     }
-
-    if (parseFloat(investmentAmount) > filmBalance) {
-      setError("Insufficient FILM token balance");
+    
+    const amount = parseFloat(investmentAmount);
+    
+    if (amount > filmBalance) {
+      setError("Insufficient balance");
       return;
     }
-
-    setIsInvesting(true);
+    
+    setIsSubmitting(true);
     setError(null);
-
+    
     try {
       // In a real app, you would call the smart contract here
       // For now, we'll just simulate a successful investment
       
-      // Update the project's funding
-      setProjects(prev => prev.map(project => 
-        project.id === projectId
-          ? {...project, currentFunding: project.currentFunding + parseFloat(investmentAmount)}
-          : project
-      ));
-
-      // Reset form
-      setInvestmentAmount(0);
-      setProjectedReturn(null);
-      
-      // Show success modal
       setTimeout(() => {
-        setIsInvesting(false);
-        setShowSuccessModal(true);
-      }, 1500);
+        // Update the project's funding
+        setProjects(prev => prev.map(project => {
+          if (project.id === selectedProject.id) {
+            return {
+              ...project,
+              fundingRaised: project.fundingRaised + amount,
+              investors: project.investors + 1
+            };
+          }
+          return project;
+        }));
+        
+        // Show success message
+        alert(`Successfully invested ${amount} FILM in ${selectedProject.title}`);
+        
+        // Reset form
+        setInvestmentAmount('');
+        setCalculatedReturn(null);
+        
+        // Close modal
+        setShowProjectModal(false);
+        setSelectedProject(null);
+        setIsSubmitting(false);
+      }, 2000);
       
     } catch (err) {
       console.error("Error investing:", err);
-      setError("Transaction failed. Please try again.");
-      setIsInvesting(false);
+      setError("Investment failed. Please try again.");
+      setIsSubmitting(false);
     }
   };
 
   return (
     <div className="indie-fund-container">
+      {/* Section Header with Description - Separated from listings */}
       <div className="section-header">
-        <h2 className="section-title">IndieFund</h2>
-        <p className="section-subtitle">Invest in the next generation of independent films and earn returns from box office success</p>
+        <h2 className="section-title">Indie Fund</h2>
+        <p className="section-subtitle">
+          Invest in the next generation of films and earn returns from box office success
+        </p>
       </div>
       
-      <div className="tabs">
-        <button 
-          className={`tab-button ${activeTab === 'trending' ? 'active' : ''}`}
-          onClick={() => setActiveTab('trending')}
+      {/* Enhanced Filters Section */}
+      <div className="filters-section">
+        <div className="search-container">
+          <i className="fas fa-search search-icon"></i>
+          <input
+            type="text"
+            className="search-input"
+            placeholder="Search projects..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+        </div>
+        
+        <select
+          className="filter-select"
+          value={filters.category}
+          onChange={(e) => setFilters(prev => ({ ...prev, category: e.target.value }))}
         >
-          Trending Projects
-        </button>
-        <button 
-          className={`tab-button ${activeTab === 'new' ? 'active' : ''}`}
-          onClick={() => setActiveTab('new')}
+          <option value="all">All Categories</option>
+          <option value="Feature Film">Feature Film</option>
+          <option value="Documentary">Documentary</option>
+          <option value="Short Film">Short Film</option>
+          <option value="Animation">Animation</option>
+        </select>
+        
+        <select
+          className="filter-select"
+          value={filters.fundingStatus}
+          onChange={(e) => setFilters(prev => ({ ...prev, fundingStatus: e.target.value }))}
         >
-          New Arrivals
-        </button>
-        <button 
-          className={`tab-button ${activeTab === 'ending' ? 'active' : ''}`}
-          onClick={() => setActiveTab('ending')}
+          <option value="all">All Funding Status</option>
+          <option value="funded">Fully Funded</option>
+          <option value="in-progress">In Progress</option>
+        </select>
+        
+        <select
+          className="filter-select"
+          value={filters.genre}
+          onChange={(e) => setFilters(prev => ({ ...prev, genre: e.target.value }))}
         >
-          Ending Soon
-        </button>
-        {account && (
-          <button 
-            className={`tab-button ${activeTab === 'invested' ? 'active' : ''}`}
-            onClick={() => setActiveTab('invested')}
-          >
-            My Investments
-          </button>
-        )}
+          <option value="all">All Genres</option>
+          <option value="Sci-Fi Drama">Sci-Fi Drama</option>
+          <option value="Documentary">Documentary</option>
+          <option value="Musical Drama">Musical Drama</option>
+        </select>
       </div>
       
-      <div className="grid">
-        {projects.map(project => (
-          <div key={project.id} className="card project-card">
-            <div className="card-image">
-              <img src={project.image} alt={project.title} />
-              <div className="card-badge">
-                {project.genre}
-              </div>
-            </div>
-            <div className="card-content">
-              <h3 className="card-title">{project.title}</h3>
-              <p className="card-subtitle">Directed by {project.director}</p>
-              
-              <div className="funding-progress">
-                <div className="progress-bar-container">
-                  <div 
-                    className="progress-bar"
-                    style={{ width: `${(project.currentFunding / project.fundingGoal) * 100}%` }}
-                  ></div>
-                </div>
-                <div className="funding-stats">
-                  <span className="funding-raised">${project.currentFunding.toLocaleString()}</span>
-                  <span className="funding-goal">of ${project.fundingGoal.toLocaleString()}</span>
-                  <span className="funding-percentage">
-                    {Math.round((project.currentFunding / project.fundingGoal) * 100)}%
-                  </span>
-                </div>
-              </div>
-              
-              <p className="deadline">
-                <i className="far fa-calendar-alt"></i> Deadline: {new Date(project.deadline).toLocaleDateString()}
-              </p>
-              
-              <button 
-                className="btn btn-primary btn-block"
-                onClick={() => setSelectedProject(project)}
-              >
-                View Details
-              </button>
-            </div>
-          </div>
-        ))}
-      </div>
-      
-      {/* Project Details Modal */}
-      {selectedProject && (
-        <div className={`modal-overlay ${selectedProject ? 'active' : ''}`}>
-          <div className="modal-content">
-            <div className="modal-header">
-              <h3 className="modal-title">{selectedProject.title}</h3>
-              <button 
-                className="close-btn"
-                onClick={() => {
-                  setSelectedProject(null);
-                  setActivePhase(0);
-                  setInvestmentAmount(0);
-                  setProjectedReturn(null);
-                  setError(null);
-                  setActiveTab('overview');
-                }}
-              >
-                &times;
-              </button>
-            </div>
+      {/* Projects Grid */}
+      <div className="projects-grid">
+        {filteredProjects.length > 0 ? (
+          filteredProjects.map(project => {
+            const fundingPercentage = Math.min(Math.round((project.fundingRaised / project.fundingGoal) * 100), 100);
             
-            <div className="modal-body">
-              <div className="project-header">
-                <div className="project-image">
-                  <img src={selectedProject.image} alt={selectedProject.title} />
-                </div>
-                <div className="project-meta">
-                  <div className="meta-item">
-                    <i className="fas fa-film"></i>
-                    <span>{selectedProject.genre}</span>
-                  </div>
-                  <div className="meta-item">
-                    <i className="fas fa-user"></i>
-                    <span>Director: {selectedProject.director}</span>
-                  </div>
-                  <div className="meta-item">
-                    <i className="far fa-calendar-alt"></i>
-                    <span>Deadline: {new Date(selectedProject.deadline).toLocaleDateString()}</span>
-                  </div>
-                </div>
-              </div>
-              
-              <div className="funding-progress">
-                <div className="progress-bar-container">
-                  <div 
-                    className="progress-bar"
-                    style={{ width: `${(selectedProject.currentFunding / selectedProject.fundingGoal) * 100}%` }}
-                  ></div>
-                </div>
-                <div className="funding-stats">
-                  <div className="funding-raised">
-                    <span className="label">Raised</span>
-                    <span className="value">${selectedProject.currentFunding.toLocaleString()}</span>
-                  </div>
-                  <div className="funding-goal">
-                    <span className="label">Goal</span>
-                    <span className="value">${selectedProject.fundingGoal.toLocaleString()}</span>
-                  </div>
-                  <div className="funding-percentage">
-                    <span className="label">Progress</span>
-                    <span className="value">
-                      {Math.round((selectedProject.currentFunding / selectedProject.fundingGoal) * 100)}%
-                    </span>
-                  </div>
-                </div>
-              </div>
-              
-              <div className="project-tabs">
-                <button 
-                  className={`project-tab ${activeTab === 'overview' ? 'active' : ''}`}
-                  onClick={() => setActiveTab('overview')}
-                >
-                  Overview
-                </button>
-                <button 
-                  className={`project-tab ${activeTab === 'team' ? 'active' : ''}`}
-                  onClick={() => setActiveTab('team')}
-                >
-                  Team
-                </button>
-                <button 
-                  className={`project-tab ${activeTab === 'updates' ? 'active' : ''}`}
-                  onClick={() => setActiveTab('updates')}
-                >
-                  Updates
-                </button>
-                <button 
-                  className={`project-tab ${activeTab === 'invest' ? 'active' : ''}`}
-                  onClick={() => setActiveTab('invest')}
-                >
-                  Invest
-                </button>
-              </div>
-              
-              <div className="project-tab-content">
-                {activeTab === 'overview' && (
-                  <div className="overview-tab">
-                    <div className="project-description">
-                      <h4>About the Project</h4>
-                      <p>{selectedProject.description}</p>
-                    </div>
-                    
-                    <div className="project-milestones">
-                      <h4>Project Timeline</h4>
-                      <div className="timeline">
-                        {selectedProject.milestones.map((milestone, index) => (
-                          <div 
-                            key={index}
-                            className={`timeline-item ${milestone.completed ? 'completed' : ''} ${index === activePhase ? 'active' : ''}`}
-                            onClick={() => setActivePhase(index)}
-                          >
-                            <div className="timeline-marker"></div>
-                            <div className="timeline-content">
-                              <h5>{milestone.title}</h5>
-                              <p>{milestone.description}</p>
-                              <span className="timeline-date">{milestone.date}</span>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                )}
-                
-                {activeTab === 'team' && (
-                  <div className="team-tab">
-                    <h4>Project Team</h4>
-                    <div className="team-grid">
-                      {selectedProject.team.map((member, index) => (
-                        <div key={index} className="team-member">
-                          <div className="member-avatar">
-                            <img src={member.image} alt={member.name} />
-                          </div>
-                          <h5 className="member-name">{member.name}</h5>
-                          <p className="member-role">{member.role}</p>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-                
-                {activeTab === 'updates' && (
-                  <div className="updates-tab">
-                    <h4>Project Updates</h4>
-                    <div className="updates-list">
-                      {selectedProject.updates.map(update => (
-                        <div key={update.id} className="update-card">
-                          <div className="update-header">
-                            <h5>{update.title}</h5>
-                            <span className="update-date">{update.date}</span>
-                          </div>
-                          <p className="update-content">{update.content}</p>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-                
-                {activeTab === 'invest' && (
-                  <div className="invest-tab">
-                    <div className="investment-calculator">
-                      <h4>Investment Calculator</h4>
-                      <p>Calculate your potential returns based on projected box office performance.</p>
-                      
-                      <div className="form-group">
-                        <label className="form-label">Investment Amount (FILM)</label>
-                        <input
-                          type="number"
-                          className="form-control"
-                          value={investmentAmount}
-                          onChange={(e) => setInvestmentAmount(e.target.value)}
-                          min="100"
-                          step="100"
-                          placeholder="Enter amount (min. 100 FILM)"
-                        />
-                      </div>
-                      
-                      <button 
-                        className="btn btn-secondary"
-                        onClick={calculateReturns}
-                        disabled={isInvesting}
-                      >
-                        Calculate Potential Returns
-                      </button>
-                      
-                      {projectedReturn && (
-                        <div className="returns-preview">
-                          <h5>Projected Returns</h5>
-                          <div className="returns-value">{projectedReturn.toLocaleString()} FILM</div>
-                          <p className="returns-note">
-                            *Based on projected box office performance. Actual returns may vary.
-                          </p>
-                        </div>
-                      )}
-                      
-                      <div className="wallet-balance">
-                        <i className="fas fa-wallet"></i>
-                        <span>Your FILM Balance: {filmBalance.toLocaleString()} FILM</span>
-                      </div>
-                      
-                      <button 
-                        className="btn btn-primary btn-block"
-                        onClick={() => handleInvest(selectedProject.id)}
-                        disabled={isInvesting || !investmentAmount || investmentAmount <= 0}
-                      >
-                        {isInvesting ? (
-                          <span>
-                            <i className="fas fa-spinner fa-spin"></i> Processing...
-                          </span>
-                        ) : (
-                          'Invest Now'
-                        )}
-                      </button>
-                      
-                      {error && <p className="form-error">{error}</p>}
-                    </div>
-                    
-                    <div className="investment-info">
-                      <h4>How It Works</h4>
-                      <div className="info-step">
-                        <div className="step-number">1</div>
-                        <div className="step-content">
-                          <h5>Choose Your Investment</h5>
-                          <p>Decide how many FILM tokens you want to invest in this project.</p>
-                        </div>
-                      </div>
-                      <div className="info-step">
-                        <div className="step-number">2</div>
-                        <div className="step-content">
-                          <h5>Receive Ownership Tokens</h5>
-                          <p>Get project-specific tokens representing your share of the film.</p>
-                        </div>
-                      </div>
-                      <div className="info-step">
-                        <div className="step-number">3</div>
-                        <div className="step-content">
-                          <h5>Earn Returns</h5>
-                          <p>Receive a share of the film's revenue proportional to your investment.</p>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-      
-      {/* Success Modal */}
-      {showSuccessModal && (
-        <div className={`modal-overlay ${showSuccessModal ? 'active' : ''}`}>
-          <div className="modal-content success-modal">
-            <div className="success-icon">
-              <i className="fas fa-check-circle"></i>
-            </div>
-            <h3>Investment Successful!</h3>
-            <p>Your investment has been processed successfully. You can track your investments in the "My Investments" tab.</p>
-            <button 
-              className="btn btn-primary"
-              onClick={() => {
-                setShowSuccessModal(false);
-                setSelectedProject(null);
-              }}
-            >
-              Close
-            </button>
-          </div>
-        </div>
-      )}
-      
-      {walletError && <p className="form-error">{walletError}</p>}
-    </div>
-  );
-};
-
-export default IndieFundSection;
+            return (
+              <div
+                key={project.id}
+                className="project-card"
+                onClick={() => {
+                  setSelectedProject(project);
+                  setShowProjectModal(true);
+                  setActiveTab('overview');
+                  setInvestmentAmount('');
+                  setCalculatedReturn(null);
+                  setError(null
