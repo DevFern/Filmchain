@@ -1,9 +1,6 @@
 // src/contexts/WalletContext.js
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { ethers } from 'ethers';
-import { createHelia } from 'helia';
-import { unixfs } from '@helia/unixfs';
-import { createHttp } from '@helia/http';
 
 const WalletContext = createContext();
 
@@ -15,52 +12,22 @@ export const WalletProvider = ({ children }) => {
   const [signer, setSigner] = useState(null);
   const [filmBalance, setFilmBalance] = useState(1000);
   const [error, setError] = useState(null);
-  const [isMetaMaskInstalled, setIsMetaMaskInstalled] = useState(true);
-  const [helia, setHelia] = useState(null);
-  const [fs, setFs] = useState(null);
+  const [isMetaMaskInstalled, setIsMetaMaskInstalled] = useState(false); // Start with false
   const [isInitializing, setIsInitializing] = useState(true);
   const [isConnecting, setIsConnecting] = useState(false);
 
+  // Check if MetaMask is installed on page load
   useEffect(() => {
     checkIfMetaMaskInstalled();
-    initializeHelia();
   }, []);
 
-  const initializeHelia = async () => {
-    try {
-      setIsInitializing(true);
-      
-      // Create a new Helia instance
-      const heliaInstance = await createHelia();
-      setHelia(heliaInstance);
-      
-      // Create HTTP client using the correct import
-      const httpClient = createHttp(heliaInstance);
-      
-      // Initialize UnixFS with the Helia instance
-      const fsInstance = unixfs(heliaInstance);
-      setFs(fsInstance);
-    } catch (err) {
-      console.error("Failed to initialize Helia:", err);
-      // Provide fallback functionality
-      setHelia({
-        add: async () => "mock-cid-for-fallback",
-        get: async () => new Uint8Array([])
-      });
-      setFs({
-        addBytes: async () => "mock-cid-for-fallback",
-        cat: async function* () { yield new Uint8Array([]); }
-      });
-    } finally {
-      setIsInitializing(false);
-    }
-  };
-
+  // This function checks if MetaMask is installed
   const checkIfMetaMaskInstalled = () => {
     const { ethereum } = window;
-    if (!ethereum || !ethereum.isMetaMask) {
-      setIsMetaMaskInstalled(false);
-    } else {
+    
+    // This is the key fix - properly detect MetaMask
+    if (ethereum && ethereum.isMetaMask) {
+      console.log("MetaMask is installed!");
       setIsMetaMaskInstalled(true);
       setupEventListeners();
       
@@ -68,21 +35,31 @@ export const WalletProvider = ({ children }) => {
       ethereum.request({ method: 'eth_accounts' })
         .then(accounts => {
           if (accounts.length > 0) {
+            console.log("Found connected account:", accounts[0]);
             setAccount(accounts[0]);
             initializeWeb3(ethereum);
+          } else {
+            console.log("No connected accounts found");
           }
         })
         .catch(err => {
           console.error("Error checking connected accounts:", err);
         });
+    } else {
+      console.log("MetaMask is not installed");
+      setIsMetaMaskInstalled(false);
     }
+    
+    setIsInitializing(false);
   };
 
   const setupEventListeners = () => {
     const { ethereum } = window;
     
     if (ethereum) {
+      // Handle account changes
       ethereum.on('accountsChanged', (accounts) => {
+        console.log("Accounts changed:", accounts);
         if (accounts.length > 0) {
           setAccount(accounts[0]);
           initializeWeb3(ethereum);
@@ -93,7 +70,9 @@ export const WalletProvider = ({ children }) => {
         }
       });
       
+      // Handle chain changes
       ethereum.on('chainChanged', () => {
+        console.log("Network changed, reloading...");
         window.location.reload();
       });
     }
@@ -129,9 +108,11 @@ export const WalletProvider = ({ children }) => {
         return;
       }
       
+      console.log("Requesting accounts...");
       const accounts = await ethereum.request({ method: 'eth_requestAccounts' });
       
       if (accounts.length > 0) {
+        console.log("Connected to account:", accounts[0]);
         setAccount(accounts[0]);
         await initializeWeb3(ethereum);
       }
@@ -155,43 +136,6 @@ export const WalletProvider = ({ children }) => {
     setFilmBalance(0);
   };
 
-  // Function to upload to IPFS using Helia
-  const uploadToIPFS = async (file) => {
-    if (!fs) {
-      throw new Error("IPFS not initialized");
-    }
-    
-    try {
-      const fileBuffer = await file.arrayBuffer();
-      const cid = await fs.addBytes(new Uint8Array(fileBuffer));
-      return cid.toString();
-    } catch (err) {
-      console.error("Error uploading to IPFS:", err);
-      throw err;
-    }
-  };
-
-  // Function to get content from IPFS using Helia
-  const getFromIPFS = async (cid) => {
-    if (!fs) {
-      throw new Error("IPFS not initialized");
-    }
-    
-    try {
-      const decoder = new TextDecoder();
-      let data = '';
-      
-      for await (const chunk of fs.cat(cid)) {
-        data += decoder.decode(chunk, { stream: true });
-      }
-      
-      return data;
-    } catch (err) {
-      console.error("Error getting from IPFS:", err);
-      throw err;
-    }
-  };
-
   return (
     <WalletContext.Provider
       value={{
@@ -204,12 +148,12 @@ export const WalletProvider = ({ children }) => {
         isMetaMaskInstalled,
         isInitializing,
         connectWallet,
-        disconnectWallet,
-        uploadToIPFS,
-        getFromIPFS
+        disconnectWallet
       }}
     >
       {children}
     </WalletContext.Provider>
   );
 };
+
+export default WalletContext;
