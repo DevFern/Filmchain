@@ -187,9 +187,28 @@ function App() {
             </ul>
           </nav>
           
-          {/* Keep the rest of the header unchanged */}
+          {/* Add the connect wallet button here */}
           <div className="header-actions">
-            {/* ... existing code ... */}
+            {isMetaMaskInstalled && !account && (
+              <button 
+                className="connect-wallet-btn" 
+                onClick={connectWallet}
+                disabled={isConnecting}
+              >
+                {isConnecting ? 'Connecting...' : 'Connect Wallet'}
+              </button>
+            )}
+            
+            {account && (
+              <div className="wallet-info">
+                <span className="wallet-address">
+                  {account.substring(0, 6)}...{account.substring(account.length - 4)}
+                </span>
+                <button className="disconnect-btn" onClick={disconnectWallet}>
+                  Disconnect
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </header>
@@ -216,9 +235,54 @@ function App() {
         </div>
       </main>
       
-      {/* Keep the footer unchanged */}
       <footer className="app-footer">
-        {/* ... existing code ... */}
+        <div className="container">
+          <div className="footer-content">
+            <div className="footer-logo">
+              <h2>FilmChain</h2>
+              <p>Revolutionizing the film industry with blockchain technology</p>
+            </div>
+            <div className="footer-links">
+              <div className="footer-links-column">
+                <h3>Platform</h3>
+                <ul>
+                  <li><a href="#indiefund">IndieFund</a></li>
+                  <li><a href="#communityvoice">Community Voice</a></li>
+                  <li><a href="#hyreblock">HyreBlock</a></li>
+                  <li><a href="#blockoffice">BlockOffice</a></li>
+                  <li><a href="#nftmarket">NFT Market</a></li>
+                </ul>
+              </div>
+              <div className="footer-links-column">
+                <h3>Resources</h3>
+                <ul>
+                  <li><a href="#docs">Documentation</a></li>
+                  <li><a href="#api">API</a></li>
+                  <li><a href="#faq">FAQ</a></li>
+                  <li><a href="#support">Support</a></li>
+                </ul>
+              </div>
+              <div className="footer-links-column">
+                <h3>Company</h3>
+                <ul>
+                  <li><a href="#about">About</a></li>
+                  <li><a href="#careers">Careers</a></li>
+                  <li><a href="#blog">Blog</a></li>
+                  <li><a href="#contact">Contact</a></li>
+                </ul>
+              </div>
+            </div>
+          </div>
+          <div className="footer-bottom">
+            <p>&copy; 2024 FilmChain. All rights reserved.</p>
+            <div className="footer-social">
+              <a href="#twitter" aria-label="Twitter"><i className="fab fa-twitter"></i></a>
+              <a href="#discord" aria-label="Discord"><i className="fab fa-discord"></i></a>
+              <a href="#github" aria-label="GitHub"><i className="fab fa-github"></i></a>
+              <a href="#medium" aria-label="Medium"><i className="fab fa-medium"></i></a>
+            </div>
+          </div>
+        </div>
       </footer>
     </div>
   );
