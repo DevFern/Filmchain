@@ -1,122 +1,95 @@
 // src/contexts/WalletContext.js
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
-// Create context
 const WalletContext = createContext();
 
-// Hook to use the wallet context
 export const useWallet = () => useContext(WalletContext);
 
 export const WalletProvider = ({ children }) => {
   const [account, setAccount] = useState(null);
   const [isMetaMaskInstalled, setIsMetaMaskInstalled] = useState(false);
   const [isInitializing, setIsInitializing] = useState(true);
-  const [isConnecting, setIsConnecting] = useState(false);
   const [error, setError] = useState(null);
 
-  // Check if MetaMask is installed
+  // Check for MetaMask on component mount
   useEffect(() => {
-    const checkMetaMask = () => {
-      console.log("Checking for MetaMask...");
+    const detectMetaMask = () => {
+      // Log the current state for debugging
+      console.log("Detecting MetaMask...");
+      console.log("window.ethereum:", window.ethereum);
       
-      if (window.ethereum && window.ethereum.isMetaMask) {
-        console.log("MetaMask is installed!");
-        setIsMetaMaskInstalled(true);
+      // Check if MetaMask is installed
+      if (typeof window.ethereum !== 'undefined') {
+        console.log("window.ethereum exists");
         
-        // Check if already connected
-        window.ethereum.request({ method: 'eth_accounts' })
-          .then(accounts => {
-            if (accounts && accounts.length > 0) {
-              console.log("Found connected account:", accounts[0]);
-              setAccount(accounts[0]);
-            } else {
-              console.log("No connected accounts found");
-            }
-            setIsInitializing(false);
-          })
-          .catch(err => {
-            console.error("Error checking accounts:", err);
-            setIsInitializing(false);
-          });
+        if (window.ethereum.isMetaMask) {
+          console.log("MetaMask is confirmed!");
+          setIsMetaMaskInstalled(true);
           
-        // Setup event listeners
-        window.ethereum.on('accountsChanged', (accounts) => {
-          console.log("Accounts changed:", accounts);
-          if (accounts.length > 0) {
-            setAccount(accounts[0]);
-          } else {
-            setAccount(null);
-          }
-        });
-        
-        window.ethereum.on('chainChanged', () => {
-          console.log("Network changed, reloading...");
-          window.location.reload();
-        });
+          // Check if already connected
+          window.ethereum.request({ method: 'eth_accounts' })
+            .then(accounts => {
+              if (accounts && accounts.length > 0) {
+                console.log("Already connected to:", accounts[0]);
+                setAccount(accounts[0]);
+              }
+              setIsInitializing(false);
+            })
+            .catch(err => {
+              console.error("Error checking accounts:", err);
+              setIsInitializing(false);
+            });
+        } else {
+          console.log("window.ethereum exists but isMetaMask is false");
+          setIsMetaMaskInstalled(false);
+          setIsInitializing(false);
+        }
       } else {
-        console.log("MetaMask is not installed");
+        console.log("window.ethereum is undefined");
         setIsMetaMaskInstalled(false);
         setIsInitializing(false);
       }
     };
-    
-    // Small delay to ensure window.ethereum is available
-    setTimeout(checkMetaMask, 500);
+
+    // Delay detection slightly to ensure window.ethereum is injected
+    const timer = setTimeout(detectMetaMask, 1000);
+    return () => clearTimeout(timer);
   }, []);
 
   // Connect wallet function
   const connectWallet = async () => {
     try {
-      setIsConnecting(true);
-      setError(null);
-      
       if (!window.ethereum) {
         throw new Error("MetaMask is not installed");
       }
       
-      console.log("Requesting accounts...");
       const accounts = await window.ethereum.request({ 
         method: 'eth_requestAccounts' 
       });
       
       if (accounts && accounts.length > 0) {
-        console.log("Connected to account:", accounts[0]);
         setAccount(accounts[0]);
       } else {
         throw new Error("No accounts found");
       }
     } catch (err) {
-      console.error("Error connecting wallet:", err);
-      setError(err.message || "Failed to connect wallet");
-    } finally {
-      setIsConnecting(false);
+      console.error("Error connecting:", err);
+      setError(err.message);
     }
   };
 
   // Disconnect wallet function
   const disconnectWallet = () => {
-    console.log("Disconnecting wallet");
     setAccount(null);
   };
-
-  // Debug logging
-  useEffect(() => {
-    console.log("WalletContext state:", {
-      isMetaMaskInstalled,
-      account,
-      isInitializing,
-      error
-    });
-  }, [isMetaMaskInstalled, account, isInitializing, error]);
 
   return (
     <WalletContext.Provider
       value={{
         account,
-        error,
-        isConnecting,
         isMetaMaskInstalled,
         isInitializing,
+        error,
         connectWallet,
         disconnectWallet
       }}
