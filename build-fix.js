@@ -81,6 +81,8 @@ try {
     'cross-spawn': '^7.0.3',
     'html-minifier': '^4.0.0',
     'ip': '^2.0.0'
+    'ajv': '^8.12.0',
+    'ajv-keywords': '^5.1.0',
   };
   
   // Add all vulnerable packages to resolutions
