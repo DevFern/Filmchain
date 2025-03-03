@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "buildCommand": "npm audit fix --force && CI=false npm run build",
+  "buildCommand": "CI=false npm run build",
   "outputDirectory": "build",
   "routes": [
     { "handle": "filesystem" },
