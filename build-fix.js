@@ -27,6 +27,79 @@ function safeExec(command) {
   }
 }
 
+// Function to find files with Helia imports
+function findFilesWithHeliaImports() {
+  try {
+    const srcDir = path.join(__dirname, 'src');
+    const result = [];
+    
+    function searchDirectory(dir) {
+      const files = fs.readdirSync(dir);
+      
+      for (const file of files) {
+        const filePath = path.join(dir, file);
+        const stats = fs.statSync(filePath);
+        
+        if (stats.isDirectory()) {
+          searchDirectory(filePath);
+        } else if (stats.isFile() && (file.endsWith('.js') || file.endsWith('.jsx'))) {
+          const content = fs.readFileSync(filePath, 'utf8');
+          if (content.includes('@helia/http')) {
+            result.push(filePath);
+          }
+        }
+      }
+    }
+    
+    if (fs.existsSync(srcDir)) {
+      searchDirectory(srcDir);
+    }
+    
+    return result;
+  } catch (error) {
+    logWithTime(`Error finding files with Helia imports: ${error.message}`);
+    return [];
+  }
+}
+
+// Function to fix Helia imports
+function fixHeliaImports(filePath) {
+  try {
+    let content = fs.readFileSync(filePath, 'utf8');
+    
+    // Fix import for createHttp
+    content = content.replace(
+      /import\s+{\s*createHttp\s*}\s+from\s+['"]@helia\/http['"]/g,
+      `import { createHelia } from 'helia'
+import { unixfs } from '@helia/unixfs'
+import { createHttp } from '@helia/http-client'`
+    );
+    
+    // Fix direct import of createHttp
+    content = content.replace(
+      /import\s+createHttp\s+from\s+['"]@helia\/http['"]/g,
+      `import { createHelia } from 'helia'
+import { unixfs } from '@helia/unixfs'
+import { createHttp } from '@helia/http-client'`
+    );
+    
+    // Fix require for createHttp
+    content = content.replace(
+      /const\s+{\s*createHttp\s*}\s+=\s+require\(['"]@helia\/http['"]\)/g,
+      `const { createHelia } = require('helia')
+const { unixfs } = require('@helia/unixfs')
+const { createHttp } = require('@helia/http-client')`
+    );
+    
+    fs.writeFileSync(filePath, content);
+    logWithTime(`Fixed Helia imports in ${filePath}`);
+    return true;
+  } catch (error) {
+    logWithTime(`Error fixing Helia imports in ${filePath}: ${error.message}`);
+    return false;
+  }
+}
+
 try {
   logWithTime('Starting build fix script...');
   
@@ -52,15 +125,21 @@ try {
     logWithTime('Added missing dependency: ajv-keywords');
   }
   
-  // Check for problematic dependencies
+  // Fix Helia dependencies
+  if (packageJson.dependencies['@helia/http']) {
+    delete packageJson.dependencies['@helia/http'];
+    packageJson.dependencies['@helia/http-client'] = '^1.0.0';
+    packageJson.dependencies['helia'] = '^2.0.3';
+    packageJson.dependencies['@helia/unixfs'] = '^1.4.2';
+    logWithTime('Updated Helia dependencies');
+  }
+  
   if (packageJson.dependencies['@helia/http-client']) {
-    logWithTime('Found problematic dependency: @helia/http-client');
-    
-    // Replace with correct dependency
-    packageJson.dependencies['@helia/http'] = '^1.0.0';
-    delete packageJson.dependencies['@helia/http-client'];
-    
-    logWithTime('Updated @helia/http-client to @helia/http');
+    // Make sure we have the correct version
+    packageJson.dependencies['@helia/http-client'] = '^1.0.0';
+    packageJson.dependencies['helia'] = '^2.0.3';
+    packageJson.dependencies['@helia/unixfs'] = '^1.4.2';
+    logWithTime('Updated Helia dependencies');
   }
   
   // Add postinstall script if it doesn't exist
@@ -128,7 +207,7 @@ legacy-peer-deps=true
   logWithTime('Updated .npmrc file');
   
   // Write updated package.json if changes were made
-  if (resolutionsUpdated) {
+  if (resolutionsUpdated || packageJson.dependencies['@helia/http-client']) {
     try {
       // Parse and stringify to ensure valid JSON
       const validJson = JSON.stringify(packageJson, null, 2);
@@ -483,6 +562,14 @@ input {
 `;
     fs.writeFileSync(cssPath, cssContent);
     logWithTime('Created IndieFundSection.css file');
+  }
+  
+  // Find and fix files with Helia imports
+  const heliaFiles = findFilesWithHeliaImports();
+  logWithTime(`Found ${heliaFiles.length} files with Helia imports`);
+  
+  for (const file of heliaFiles) {
+    fixHeliaImports(file);
   }
   
   // Run npm dedupe to reduce duplicate packages
