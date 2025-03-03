@@ -279,4 +279,21 @@ const IndieFundSection = () => {
                   setActiveTab('overview');
                   setInvestmentAmount('');
                   setCalculatedReturn(null);
-                  setError(null
+                  setError(null);
+    }}
+    >
+    {isSubmitting ? 'Investing...' : 'Invest Now'}
+    </button>
+    </div>
+    {error && <p className="error-message">{error}</p>}
+    </div>
+    </div>
+    </div>
+    </div>
+    </div>
+    )}
+    </div>
+  );
+};
+
+export default IndieFundSection;
