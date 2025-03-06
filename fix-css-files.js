@@ -7,95 +7,45 @@ function log(message) {
   console.log(`[${new Date().toISOString()}] ${message}`);
 }
 
-// Function to recursively find all CSS files
-function findCssFiles(dir, fileList = []) {
-  const files = fs.readdirSync(dir);
-  
-  files.forEach(file => {
-    const filePath = path.join(dir, file);
-    const stat = fs.statSync(filePath);
-    
-    if (stat.isDirectory() && file !== 'node_modules' && file !== 'build') {
-      fileList = findCssFiles(filePath, fileList);
-    } else if (path.extname(file) === '.css') {
-      fileList.push(filePath);
-    }
-  });
-  
-  return fileList;
-}
-
-// Function to fix CSS syntax issues
-function fixCssFile(filePath) {
-  log(`Checking CSS file: ${filePath}`);
-  let content = fs.readFileSync(filePath, 'utf8');
-  let fixed = false;
-  
-  // Fix common CSS syntax issues
-  
-  // 1. Fix unclosed comments
-  if (content.includes('/*') && !content.includes('*/')) {
-    content = content.replace(/\/\*([^*]|\*(?!\/))*$/, '');
-    fixed = true;
-    log(`Fixed unclosed comment in ${filePath}`);
-  }
-  
-  // 2. Fix unescaped forward slashes in URLs
-  content = content.replace(/url\(([^)]*\/\/[^)]*)\)/g, (match, url) => {
-    if (!url.startsWith('"') && !url.startsWith("'")) {
-      return `url("${url}")`;
-    }
-    return match;
-  });
-  
-  // 3. Fix incomplete rules (like .cta-)
-  content = content.replace(/\.[a-zA-Z0-9_-]+-([\s\r\n}])/g, (match, ending) => {
-    log(`Fixed incomplete CSS selector in ${filePath}`);
-    fixed = true;
-    return `.placeholder${ending}`;
-  });
-  
-  // 4. Fix missing closing braces
-  const openBraces = (content.match(/\{/g) || []).length;
-  const closeBraces = (content.match(/\}/g) || []).length;
-  if (openBraces > closeBraces) {
-    content = content + '\n}'.repeat(openBraces - closeBraces);
-    fixed = true;
-    log(`Fixed ${openBraces - closeBraces} missing closing braces in ${filePath}`);
-  }
-  
-  // 5. Fix missing semicolons
-  content = content.replace(/([a-zA-Z0-9%#)])\s*\n\s*([a-zA-Z-])/g, '$1;\n$2');
-  
-  // 6. Fix invalid calc() expressions
-  content = content.replace(/calc\(([^)]+)\/([^)]+)\)/g, (match, a, b) => {
-    return `calc(${a} / ${b})`;
-  });
-  
-  // Write fixed content back to file
-  if (fixed) {
-    fs.writeFileSync(filePath, content);
-    log(`Fixed and saved ${filePath}`);
-  } else {
-    log(`No issues found in ${filePath}`);
-  }
-}
-
-// Main function
+// Main function to fix CSS files
 function fixCssFiles() {
   try {
     log('Starting CSS files fix...');
-    
-    // Find all CSS files
+
+    // Find all CSS files in the project
     const cssFiles = findCssFiles('src');
     log(`Found ${cssFiles.length} CSS files to check`);
-    
-    // Fix each file
-    cssFiles.forEach(fixCssFile);
-    
-    // Create known good CSS files for critical components
-    createKnownGoodCssFiles();
-    
+
+    // Check and fix each CSS file
+    for (const cssFile of cssFiles) {
+      log(`Checking CSS file: ${cssFile}`);
+      
+      const content = fs.readFileSync(cssFile, 'utf8');
+      
+      // Look for unescaped forward slashes in problematic contexts
+      const fixedContent = content
+        // Fix unescaped slashes in comments
+        .replace(/\/\*([^*]|[\r\n]|(\*+([^*/]|[\r\n])))*\*+\//g, comment => {
+          return comment.replace(/\//g, '\\/');
+        })
+        // Fix unescaped slashes in URLs
+        .replace(/url\(['"]?([^'")]+)['"]?\)/g, (match, url) => {
+          return `url('${url.replace(/\//g, '\\/')}')`;
+        });
+      
+      if (content !== fixedContent) {
+        fs.writeFileSync(cssFile, fixedContent);
+        log(`Fixed issues in ${cssFile}`);
+      } else {
+        log(`No issues found in ${cssFile}`);
+      }
+    }
+
+    // Create or update key CSS files with known good content
+    updateAppCss();
+    updateHomePageCss();
+    updateMetaMaskConnectorCss();
+
     log('CSS files fix completed successfully!');
   } catch (error) {
     log(`Error during CSS files fix: ${error.message}`);
@@ -103,56 +53,69 @@ function fixCssFiles() {
   }
 }
 
-// Function to create known good CSS files for critical components
-function createKnownGoodCssFiles() {
-  // App.css - Main application styles
-  const appCssPath = path.join('src', 'App.css');
+// Function to find all CSS files in a directory recursively
+function findCssFiles(dir, fileList = []) {
+  const files = fs.readdirSync(dir);
+  
+  for (const file of files) {
+    const filePath = path.join(dir, file);
+    const stat = fs.statSync(filePath);
+    
+    if (stat.isDirectory()) {
+      findCssFiles(filePath, fileList);
+    } else if (file.endsWith('.css')) {
+      fileList.push(filePath);
+    }
+  }
+  
+  return fileList;
+}
+
+// Update App.css with known good content
+function updateAppCss() {
+  const appCssPath = 'src/App.css';
   const appCssContent = `/* App.css - Main application styles */
 :root {
   --primary-color: #f6851b;
   --primary-hover: #e2761b;
-  --background-dark: #121212;
-  --background-light: #1e1e1e;
-  --background-card: #2a2a2a;
-  --text-light: #f5f5f5;
-  --text-muted: #a0a0a0;
+  --secondary-color: #3498db;
+  --text-color: #333333;
+  --background-light: #f8f9fa;
+  --background-dark: #343a40;
+  --border-color: #dee2e6;
+  --success-color: #28a745;
+  --error-color: #dc3545;
+  --warning-color: #ffc107;
   --border-radius-sm: 4px;
   --border-radius-md: 8px;
-  --border-radius-lg: 12px;
+  --border-radius-lg: 16px;
   --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.1);
-  --shadow-md: 0 4px 8px rgba(0, 0, 0, 0.2);
-  --transition-normal: 0.3s ease;
-}
-
-* {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
+  --shadow-md: 0 4px 8px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 8px 16px rgba(0, 0, 0, 0.1);
 }
 
 body {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
-  background-color: var(--background-dark);
-  color: var(--text-light);
+  font-family: 'Inter', sans-serif;
+  color: var(--text-color);
   line-height: 1.6;
+  margin: 0;
+  padding: 0;
+  background-color: #f9f9f9;
 }
 
 .container {
-  width: 100%;
   max-width: 1200px;
   margin: 0 auto;
   padding: 0 20px;
 }
 
-/* Header styles */
-header {
-  background-color: rgba(18, 18, 18, 0.8);
-  backdrop-filter: blur(10px);
+.app-header {
+  background-color: white;
+  box-shadow: var(--shadow-sm);
+  padding: 15px 0;
   position: sticky;
   top: 0;
-  z-index: 1000;
-  padding: 15px 0;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  z-index: 100;
 }
 
 .header-container {
@@ -162,124 +125,117 @@ header {
 }
 
 .logo {
-  font-size: 1.5rem;
+  font-size: 24px;
   font-weight: 700;
   color: var(--primary-color);
   text-decoration: none;
 }
 
-.nav-menu {
+.nav-links {
   display: flex;
   gap: 20px;
 }
 
 .nav-link {
-  color: var(--text-light);
+  color: var(--text-color);
   text-decoration: none;
   font-weight: 500;
-  transition: color var(--transition-normal);
+  transition: color 0.3s ease;
 }
 
-.nav-link:hover, .nav-link.active {
+.nav-link:hover {
   color: var(--primary-color);
 }
 
-.wallet-btn {
-  background-color: var(--primary-color);
-  color: white;
-  border: none;
-  padding: 8px 16px;
-  border-radius: var(--border-radius-sm);
-  font-size: 0.9rem;
-  cursor: pointer;
-  transition: background-color var(--transition-normal);
+.nav-link.active {
+  color: var(--primary-color);
+  border-bottom: 2px solid var(--primary-color);
 }
 
-.wallet-btn:hover {
-  background-color: var(--primary-hover);
-}
-
-/* Mobile menu */
-.mobile-menu-btn {
-  display: none;
-  background: none;
-  border: none;
-  color: var(--text-light);
-  font-size: 1.5rem;
-  cursor: pointer;
-}
-
-/* Footer styles */
-footer {
+.app-footer {
   background-color: var(--background-dark);
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  color: white;
   padding: 40px 0;
   margin-top: 60px;
 }
 
 .footer-container {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 40px;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 30px;
 }
 
-.footer-column h3 {
-  color: var(--primary-color);
+.footer-section {
+  flex: 1;
+  min-width: 200px;
+}
+
+.footer-section h3 {
   margin-bottom: 20px;
-  font-size: 1.1rem;
+  font-size: 18px;
 }
 
 .footer-links {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
+  list-style: none;
+  padding: 0;
+  margin: 0;
 }
 
-.footer-link {
-  color: var(--text-muted);
+.footer-links li {
+  margin-bottom: 10px;
+}
+
+.footer-links a {
+  color: #adb5bd;
   text-decoration: none;
-  transition: color var(--transition-normal);
+  transition: color 0.3s ease;
 }
 
-.footer-link:hover {
-  color: var(--text-light);
+.footer-links a:hover {
+  color: white;
 }
 
 .social-links {
   display: flex;
   gap: 15px;
-  margin-top: 15px;
+  margin-top: 20px;
 }
 
 .social-link {
-  color: var(--text-muted);
-  font-size: 1.2rem;
-  transition: color var(--transition-normal);
+  color: white;
+  font-size: 20px;
+  transition: color 0.3s ease;
 }
 
 .social-link:hover {
   color: var(--primary-color);
 }
 
-.footer-bottom {
+.copyright {
+  text-align: center;
   margin-top: 40px;
   padding-top: 20px;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
-  text-align: center;
-  color: var(--text-muted);
-  font-size: 0.9rem;
+  border-top: 1px solid #495057;
+  color: #adb5bd;
 }
 
 /* Button styles */
+.btn {
+  display: inline-block;
+  padding: 10px 20px;
+  border-radius: var(--border-radius-sm);
+  font-weight: 500;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border: none;
+  text-decoration: none;
+}
+
 .btn-primary {
   background-color: var(--primary-color);
   color: white;
-  border: none;
-  padding: 10px 20px;
-  border-radius: var(--border-radius-sm);
-  font-size: 1rem;
-  cursor: pointer;
-  transition: background-color var(--transition-normal);
 }
 
 .btn-primary:hover {
@@ -287,274 +243,208 @@ footer {
 }
 
 .btn-secondary {
-  background-color: transparent;
-  color: var(--text-light);
-  border: 1px solid var(--text-light);
-  padding: 10px 20px;
-  border-radius: var(--border-radius-sm);
-  font-size: 1rem;
-  cursor: pointer;
-  transition: background-color var(--transition-normal);
+  background-color: var(--secondary-color);
+  color: white;
 }
 
 .btn-secondary:hover {
-  background-color: rgba(255, 255, 255, 0.1);
+  background-color: #2980b9;
+}
+
+.btn-outline {
+  background-color: transparent;
+  border: 1px solid var(--primary-color);
+  color: var(--primary-color);
+}
+
+.btn-outline:hover {
+  background-color: var(--primary-color);
+  color: white;
+}
+
+/* Form styles */
+.form-group {
+  margin-bottom: 20px;
+}
+
+.form-label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 500;
+}
+
+.form-control {
+  width: 100%;
+  padding: 10px 15px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-sm);
+  font-size: 16px;
+  transition: border-color 0.3s ease;
+}
+
+.form-control:focus {
+  outline: none;
+  border-color: var(--primary-color);
+}
+
+/* Card styles */
+.card {
+  background-color: white;
+  border-radius: var(--border-radius-md);
+  box-shadow: var(--shadow-sm);
+  padding: 20px;
+  margin-bottom: 20px;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.card:hover {
+  transform: translateY(-5px);
+  box-shadow: var(--shadow-md);
+}
+
+.card-title {
+  font-size: 20px;
+  margin-bottom: 15px;
+  color: var(--text-color);
+}
+
+.card-text {
+  color: #6c757d;
+  margin-bottom: 15px;
 }
 
 /* Responsive styles */
 @media (max-width: 768px) {
-  .mobile-menu-btn {
-    display: block;
-  }
-
-  .nav-menu {
-    position: fixed;
-    top: 70px;
-    left: 0;
-    right: 0;
-    background-color: var(--background-dark);
+  .header-container {
     flex-direction: column;
-    padding: 20px;
     gap: 15px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-    transform: translateY(-100%);
-    opacity: 0;
-    pointer-events: none;
-    transition: all 0.3s ease;
   }
-
-  .nav-menu.active {
-    transform: translateY(0);
-    opacity: 1;
-    pointer-events: auto;
+  
+  .nav-links {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  
+  .footer-container {
+    flex-direction: column;
   }
 }`;
 
   fs.writeFileSync(appCssPath, appCssContent);
-  log(`Created/Updated ${appCssPath}`);
+  log('Created/Updated src/App.css');
+}
 
-  // HomePage.css - Styles for the home page
-  const homePageCssPath = path.join('src', 'pages', 'HomePage.css');
-  const homePageCssContent = `.hero-section {
+// Update HomePage.css with known good content
+function updateHomePageCss() {
+  const homePageCssPath = 'src/pages/HomePage.css';
+  const homePageCssContent = `/* HomePage.css */
+.hero-section {
+  background-color: #f8f9fa;
   padding: 80px 0;
-  background: linear-gradient(135deg, var(--background-light) 0%, var(--background-dark) 100%);
   text-align: center;
 }
 
 .hero-section h1 {
-  font-size: 3rem;
-  margin-bottom: 1rem;
-  background: linear-gradient(135deg, #f6851b, #e2761b);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  font-size: 2.5rem;
+  margin-bottom: 20px;
+  color: #333;
 }
 
-.hero-subtitle {
-  font-size: 1.25rem;
+.hero-section p {
+  font-size: 1.2rem;
+  color: #6c757d;
   max-width: 700px;
-  margin: 0 auto 2rem;
-  color: var(--text-light);
+  margin: 0 auto 30px;
 }
 
-.hero-buttons {
+.feature-cards {
   display: flex;
-  gap: 1rem;
-  justify-content: center;
   flex-wrap: wrap;
-}
-
-.wallet-section {
-  padding: 60px 0;
-  background-color: var(--background-dark);
-}
-
-.section-header {
-  text-align: center;
-  margin-bottom: 40px;
-}
-
-.section-header h2 {
-  font-size: 2rem;
-  margin-bottom: 1rem;
-  color: var(--text-light);
-}
-
-.section-header p {
-  max-width: 700px;
-  margin: 0 auto;
-  color: var(--text-muted);
-}
-
-.wallet-container {
-  display: flex;
   justify-content: center;
-}
-
-.features-section {
-  padding: 80px 0;
-  background-color: var(--background-light);
-}
-
-.features-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
   gap: 30px;
-  margin-top: 40px;
+  margin-top: 50px;
 }
 
 .feature-card {
-  background-color: var(--background-card);
-  border-radius: 12px;
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   padding: 30px;
-  text-align: center;
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  flex: 1;
+  min-width: 250px;
+  max-width: 350px;
+  transition: transform 0.3s ease;
 }
 
 .feature-card:hover {
   transform: translateY(-10px);
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
-}
-
-.feature-icon {
-  font-size: 2.5rem;
-  color: #f6851b;
-  margin-bottom: 20px;
 }
 
 .feature-card h3 {
-  font-size: 1.25rem;
+  font-size: 1.5rem;
   margin-bottom: 15px;
-  color: var(--text-light);
-}
-
-.feature-card p {
-  color: var(--text-muted);
-}
-
-.cta-section {
-  padding: 80px 0;
-  background: linear-gradient(135deg, #f6851b 0%, #e2761b 100%);
-  text-align: center;
-  color: white;
-}
-
-.cta-section h2 {
-  font-size: 2.5rem;
-  margin-bottom: 1rem;
-}
-
-.cta-section p {
-  max-width: 700px;
-  margin: 0 auto 2rem;
-  font-size: 1.1rem;
-}
-
-.cta-buttons {
-  display: flex;
-  gap: 1rem;
-  justify-content: center;
-  flex-wrap: wrap;
-}
-
-.cta-section .btn-primary {
-  background-color: white;
   color: #f6851b;
 }
 
-.cta-section .btn-primary:hover {
-  background-color: rgba(255, 255, 255, 0.9);
-}
-
-.cta-section .btn-secondary {
-  border-color: white;
-  color: white;
-}
-
-.cta-section .btn-secondary:hover {
-  background-color: rgba(255, 255, 255, 0.1);
+.feature-card p {
+  color: #6c757d;
 }
 
 .placeholder-section {
-  padding: 40px;
-  margin: 40px 0;
-  background-color: var(--background-light);
-  border-radius: var(--border-radius-md);
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  padding: 30px;
+  margin: 30px 0;
   text-align: center;
 }
 
 .placeholder-section h2 {
-  font-size: 1.75rem;
+  color: #333;
   margin-bottom: 15px;
-  color: var(--text-light);
 }
 
 .placeholder-section p {
-  color: var(--text-muted);
-  margin-bottom: 15px;
+  color: #6c757d;
 }
 
-/* Responsive styles */
+.wallet-section {
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  padding: 30px;
+  margin: 30px 0;
+  text-align: center;
+}
+
 @media (max-width: 768px) {
-  .hero-section {
-    padding: 60px 0;
-  }
-  
-  .hero-section h1 {
-    font-size: 2.25rem;
-  }
-  
-  .hero-subtitle {
-    font-size: 1.1rem;
-  }
-  
-  .section-header h2 {
-    font-size: 1.75rem;
+  .feature-cards {
+    flex-direction: column;
+    align-items: center;
   }
   
   .feature-card {
-    padding: 20px;
-  }
-  
-  .cta-section h2 {
-    font-size: 2rem;
-  }
-}
-
-@media (max-width: 480px) {
-  .hero-section {
-    padding: 40px 0;
-  }
-  
-  .hero-section h1 {
-    font-size: 1.75rem;
-  }
-  
-  .features-grid {
-    grid-template-columns: 1fr;
+    width: 100%;
   }
 }`;
 
-  // Create directory if it doesn't exist
-  if (!fs.existsSync(path.dirname(homePageCssPath))) {
-    fs.mkdirSync(path.dirname(homePageCssPath), { recursive: true });
-  }
-  
   fs.writeFileSync(homePageCssPath, homePageCssContent);
-  log(`Created/Updated ${homePageCssPath}`);
+  log('Created/Updated src/pages/HomePage.css');
+}
 
-  // MetaMaskConnector.css - Styles for the MetaMask connector component
-  const metaMaskCssPath = path.join('src', 'components', 'MetaMaskConnector.css');
-  const metaMaskCssContent = `.metamask-container {
-  background-color: var(--background-card);
-  border-radius: var(--border-radius-md);
+// Update MetaMaskConnector.css with known good content
+function updateMetaMaskConnectorCss() {
+  const metaMaskConnectorCssPath = 'src/components/MetaMaskConnector.css';
+  const metaMaskConnectorCssContent = `/* MetaMask Connector Styles */
+.metamask-container {
+  background-color: #f8f9fa;
+  border-radius: 8px;
   padding: 20px;
   margin: 20px 0;
   max-width: 500px;
-  box-shadow: var(--shadow-sm);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-.metamask-button {
+.metamask-button, .connect-button, .disconnect-button {
   background-color: #f6851b;
   color: white;
   border: none;
@@ -567,8 +457,19 @@ footer {
   display: inline-block;
 }
 
-.metamask-button:hover {
+.metamask-button:hover, .connect-button:hover {
   background-color: #e2761b;
+}
+
+.disconnect-button {
+  background-color: #dc3545;
+  font-size: 12px;
+  padding: 5px 10px;
+  margin-left: 10px;
+}
+
+.disconnect-button:hover {
+  background-color: #c82333;
 }
 
 .status-message {
@@ -590,16 +491,51 @@ footer {
   padding: 10px;
   border-radius: 4px;
   margin: 10px 0;
+}
+
+/* Header Layout Styles */
+.metamask-header-container {
+  display: flex;
+  align-items: center;
+}
+
+.wallet-address {
+  background-color: rgba(246, 133, 27, 0.1);
+  color: #f6851b;
+  padding: 8px 12px;
+  border-radius: 20px;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.wallet-error-tooltip {
+  position: absolute;
+  top: 60px;
+  right: 20px;
+  background-color: rgba(220, 53, 69, 0.9);
+  color: white;
+  padding: 10px;
+  border-radius: 4px;
+  font-size: 14px;
+  z-index: 100;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+
+/* Home page specific styles */
+.wallet-section-large {
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  padding: 30px;
+  margin: 30px 0;
+  text-align: center;
 }`;
 
-  // Create directory if it doesn't exist
-  if (!fs.existsSync(path.dirname(metaMaskCssPath))) {
-    fs.mkdirSync(path.dirname(metaMaskCssPath), { recursive: true });
-  }
-  
-  fs.writeFileSync(metaMaskCssPath, metaMaskCssContent);
-  log(`Created/Updated ${metaMaskCssPath}`);
+  fs.writeFileSync(metaMaskConnectorCssPath, metaMaskConnectorCssContent);
+  log('Created/Updated src/components/MetaMaskConnector.css');
 }
 
 // Run the fix
+console.log('Fixing CSS files...');
 fixCssFiles();
