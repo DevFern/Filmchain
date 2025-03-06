@@ -1,3 +1,4 @@
+// Updated build-fix.js
 const fs = require('fs');
 const path = require('path');
 
@@ -38,32 +39,114 @@ async function runBuildFix() {
   }
 }
 
-// Fix package.json by removing problematic dependencies
+// Fix package.json by removing problematic dependencies and adding required ones
 function fixPackageJson() {
   const packageJsonPath = path.join(__dirname, 'package.json');
   
   if (fs.existsSync(packageJsonPath)) {
-    const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'));
-    
-    // Count dependencies before changes
-    const depCount = Object.keys(packageJson.dependencies || {}).length;
-    log(`Dependencies found: ${depCount}`);
-    
-    // Remove problematic dependencies
-    if (packageJson.dependencies && packageJson.dependencies['@helia/http']) {
-      delete packageJson.dependencies['@helia/http'];
-      log('Removed @helia/http dependency');
+    try {
+      const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'));
+      
+      // Count dependencies before changes
+      const depCount = Object.keys(packageJson.dependencies || {}).length;
+      log(`Dependencies found: ${depCount}`);
+      
+      // Remove problematic dependencies
+      if (packageJson.dependencies && packageJson.dependencies['@helia/http']) {
+        delete packageJson.dependencies['@helia/http'];
+        log('Removed @helia/http dependency');
+      }
+      
+      if (packageJson.dependencies && packageJson.dependencies['helia']) {
+        delete packageJson.dependencies['helia'];
+        log('Removed helia dependency');
+      }
+      
+      // Add required Babel plugins to devDependencies
+      if (!packageJson.devDependencies) {
+        packageJson.devDependencies = {};
+      }
+      
+      // Add @babel/plugin-proposal-private-property-in-object to devDependencies
+      if (!packageJson.devDependencies['@babel/plugin-proposal-private-property-in-object']) {
+        packageJson.devDependencies['@babel/plugin-proposal-private-property-in-object'] = '^7.21.0';
+        log('Added @babel/plugin-proposal-private-property-in-object to devDependencies');
+      }
+      
+      // Save changes
+      fs.writeFileSync(packageJsonPath, JSON.stringify(packageJson, null, 2));
+    } catch (error) {
+      log(`Error parsing package.json: ${error.message}`);
+      // Create a new valid package.json if parsing fails
+      createNewPackageJson();
     }
-    
-    // Save changes
-    fs.writeFileSync(packageJsonPath, JSON.stringify(packageJson, null, 2));
+  } else {
+    log('package.json not found, creating new one');
+    createNewPackageJson();
   }
+}
+
+// Create a new valid package.json file
+function createNewPackageJson() {
+  const validPackageJson = {
+    "name": "filmchain-platform",
+    "version": "0.1.0",
+    "private": true,
+    "dependencies": {
+      "@openzeppelin/contracts": "^4.8.0",
+      "@testing-library/jest-dom": "^5.16.5",
+      "@testing-library/react": "^13.4.0",
+      "@testing-library/user-event": "^13.5.0",
+      "ajv": "^8.12.0",
+      "ajv-keywords": "^5.1.0",
+      "axios": "^1.2.1",
+      "ethers": "^5.7.2",
+      "framer-motion": "^10.16.4",
+      "react": "^18.2.0",
+      "react-dom": "^18.2.0",
+      "react-router-dom": "^6.4.5",
+      "react-scripts": "5.0.1",
+      "web3": "^1.8.1"
+    },
+    "devDependencies": {
+      "@babel/plugin-proposal-private-property-in-object": "^7.21.0"
+    },
+    "scripts": {
+      "prebuild": "node build-fix.js",
+      "postinstall": "node build-fix.js",
+      "start": "react-scripts start",
+      "build": "react-scripts build",
+      "test": "react-scripts test",
+      "eject": "react-scripts eject"
+    },
+    "eslintConfig": {
+      "extends": [
+        "react-app",
+        "react-app/jest"
+      ]
+    },
+    "browserslist": {
+      "production": [
+        ">0.2%",
+        "not dead",
+        "not op_mini all"
+      ],
+      "development": [
+        "last 1 chrome version",
+        "last 1 firefox version",
+        "last 1 safari version"
+      ]
+    }
+  };
+  
+  fs.writeFileSync('package.json', JSON.stringify(validPackageJson, null, 2));
+  log('Created new package.json file');
 }
 
 // Update .npmrc file
 function updateNpmrc() {
   const npmrcPath = path.join(__dirname, '.npmrc');
-  const npmrcContent = 'legacy-peer-deps=true\nnode-linker=hoisted';
+  const npmrcContent = 'legacy-peer-deps=true\nsave-exact=true\naudit=false\nfund=false';
   
   fs.writeFileSync(npmrcPath, npmrcContent);
   log('Updated .npmrc file');
@@ -73,14 +156,13 @@ function updateNpmrc() {
 function updateVercelJson() {
   const vercelJsonPath = path.join(__dirname, 'vercel.json');
   const vercelJsonContent = {
-    "rewrites": [
-      { "source": "/(.*)", "destination": "/index.html" }
-    ],
-    "build": {
-      "env": {
-        "CI": "false"
-      }
-    }
+    "version": 2,
+    "buildCommand": "CI=false npm run build",
+    "outputDirectory": "build",
+    "routes": [
+      { "handle": "filesystem" },
+      { "src": "/[^.]+", "dest": "/index.html" }
+    ]
   };
   
   fs.writeFileSync(vercelJsonPath, JSON.stringify(vercelJsonContent, null, 2));
@@ -92,7 +174,15 @@ function updateBabelrc() {
   const babelrcPath = path.join(__dirname, '.babelrc');
   const babelrcContent = {
     "presets": ["@babel/preset-env", "@babel/preset-react"],
-    "plugins": ["@babel/plugin-proposal-private-property-in-object"]
+    "plugins": [
+      "@babel/plugin-proposal-private-property-in-object",
+      "@babel/plugin-transform-private-property-in-object",
+      "@babel/plugin-transform-private-methods",
+      "@babel/plugin-transform-class-properties",
+      "@babel/plugin-transform-nullish-coalescing-operator",
+      "@babel/plugin-transform-optional-chaining",
+      "@babel/plugin-transform-numeric-separator"
+    ]
   };
   
   fs.writeFileSync(babelrcPath, JSON.stringify(babelrcContent, null, 2));
@@ -216,7 +306,7 @@ export default IndieFundSection;`;
 
 // Fix WalletContext component - only called if MetaMaskConnector doesn't exist
 function fixWalletContext() {
-  const walletContextPath = path.join(__dirname, 'src', 'context', 'WalletContext.js');
+  const walletContextPath = path.join(__dirname, 'src', 'contexts', 'WalletContext.js');
   
   // Create directory if it doesn't exist
   const walletContextDir = path.dirname(walletContextPath);
@@ -255,7 +345,7 @@ export const WalletProvider = ({ children }) => {
           .catch(err => {
             console.error('Error checking accounts:', err);
           });
-          
+        
         // Listen for account changes
         window.ethereum.on('accountsChanged', (accounts) => {
           if (accounts.length > 0) {
