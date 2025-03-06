@@ -421,6 +421,13 @@ export default WalletContext;`;
   fs.writeFileSync(walletContextPath, walletContextContent);
   log('Completely replaced WalletContext.js with a simplified version');
 }
-
+/ Add this to your build-fix.js file, right before the final log message
+// Fix CSS files
+log('Fixing CSS files...');
+try {
+  require('./fix-css-files.js');
+} catch (error) {
+  log(`Error fixing CSS files: ${error.message}`);
+}
 // Run the script
 runBuildFix();
