@@ -1,3 +1,6 @@
+// At the top of your build-fix.js file, add:
+// Run the CSS fix script first
+require('./fix-css-files.js');
 // Updated build-fix.js
 const fs = require('fs');
 const path = require('path');
