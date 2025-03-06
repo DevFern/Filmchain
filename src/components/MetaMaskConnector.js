@@ -1,89 +1,43 @@
 // src/components/MetaMaskConnector.js
 import React, { useState, useEffect } from 'react';
+import { useWallet } from '../contexts/WalletContext';
+import './DesignFixes.css'; // Make sure this CSS file is available
 
-const MetaMaskConnector = () => {
-  const [account, setAccount] = useState(null);
-  const [isMetaMaskInstalled, setIsMetaMaskInstalled] = useState(false);
-  const [isConnecting, setIsConnecting] = useState(false);
-  const [error, setError] = useState(null);
+const MetaMaskConnector = ({ compact = false }) => {
+  const { 
+    account, 
+    isMetaMaskInstalled, 
+    isInitializing,
+    error, 
+    connectWallet, 
+    disconnectWallet 
+  } = useWallet();
+  
+  const [showError, setShowError] = useState(false);
 
-  // Check if MetaMask is installed
+  // Show error message for 5 seconds when error changes
   useEffect(() => {
-    const checkMetaMask = () => {
-      if (window.ethereum && window.ethereum.isMetaMask) {
-        console.log('MetaMask is installed!');
-        setIsMetaMaskInstalled(true);
-        
-        // Check if already connected
-        window.ethereum.request({ method: 'eth_accounts' })
-          .then(accounts => {
-            if (accounts && accounts.length > 0) {
-              console.log('Already connected to account:', accounts[0]);
-              setAccount(accounts[0]);
-            }
-          })
-          .catch(err => {
-            console.error('Error checking accounts:', err);
-          });
-          
-        // Listen for account changes
-        window.ethereum.on('accountsChanged', (accounts) => {
-          if (accounts.length > 0) {
-            console.log('Account changed to:', accounts[0]);
-            setAccount(accounts[0]);
-          } else {
-            console.log('Account disconnected');
-            setAccount(null);
-          }
-        });
-      } else {
-        console.log('MetaMask is not installed');
-        setIsMetaMaskInstalled(false);
-      }
-    };
-    
-    // Small delay to ensure window.ethereum is available
-    setTimeout(checkMetaMask, 1000);
-  }, []);
-
-  // Connect to MetaMask
-  const connectToMetaMask = async () => {
-    setIsConnecting(true);
-    setError(null);
-    
-    try {
-      if (!window.ethereum) {
-        throw new Error('MetaMask is not installed');
-      }
-      
-      console.log('Requesting accounts...');
-      const accounts = await window.ethereum.request({ 
-        method: 'eth_requestAccounts' 
-      });
-      
-      if (accounts && accounts.length > 0) {
-        console.log('Connected to account:', accounts[0]);
-        setAccount(accounts[0]);
-      } else {
-        throw new Error('No accounts found');
-      }
-    } catch (err) {
-      console.error('Error connecting to MetaMask:', err);
-      setError(err.message || 'Failed to connect to MetaMask');
-    } finally {
-      setIsConnecting(false);
+    if (error) {
+      setShowError(true);
+      const timer = setTimeout(() => setShowError(false), 5000);
+      return () => clearTimeout(timer);
     }
-  };
+  }, [error]);
 
-  // Disconnect from MetaMask
-  const disconnectWallet = () => {
-    setAccount(null);
-  };
+  // If still initializing, show loading state
+  if (isInitializing) {
+    return (
+      <div className={compact ? "metamask-header-container" : "metamask-container"}>
+        <div className="status-message">Checking wallet status...</div>
+      </div>
+    );
+  }
 
-  // Render MetaMask installation prompt
+  // If MetaMask is not installed
   if (!isMetaMaskInstalled) {
     return (
-      <div className="metamask-header-container">
+      <div className={compact ? "metamask-header-container" : "metamask-container"}>
+        <div className="status-message">MetaMask is not installed</div>
         <a 
           href="https://metamask.io/download.html" 
           target="_blank" 
@@ -96,31 +50,58 @@ const MetaMaskConnector = () => {
     );
   }
 
+  // If connected to wallet
+  if (account) {
+    return (
+      <div className={compact ? "metamask-header-container" : "metamask-container"}>
+        {compact ? (
+          <div className="wallet-address">
+            {account.slice(0, 6)}...{account.slice(-4)}
+            <button 
+              onClick={disconnectWallet}
+              className="disconnect-button"
+              title="Disconnect wallet"
+            >
+              Disconnect
+            </button>
+          </div>
+        ) : (
+          <>
+            <div className="account-info">
+              Connected: {account.slice(0, 6)}...{account.slice(-4)}
+            </div>
+            <button 
+              onClick={disconnectWallet}
+              className="disconnect-button"
+            >
+              Disconnect Wallet
+            </button>
+          </>
+        )}
+        
+        {showError && error && (
+          <div className={compact ? "wallet-error-tooltip" : "error-message"}>
+            {error}
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  // Not connected yet
   return (
-    <div className="metamask-header-container">
-      {error && (
-        <div className="wallet-error-tooltip">
-          Error: {error}
-        </div>
-      )}
+    <div className={compact ? "metamask-header-container" : "metamask-container"}>
+      <button 
+        onClick={connectWallet}
+        className="connect-button"
+        disabled={isInitializing}
+      >
+        Connect Wallet
+      </button>
       
-      {!account ? (
-        <button 
-          className="connect-button"
-          onClick={connectToMetaMask}
-          disabled={isConnecting}
-        >
-          {isConnecting ? 'Connecting...' : 'Connect Wallet'}
-        </button>
-      ) : (
-        <div className="wallet-address">
-          {account.substring(0, 6)}...{account.substring(account.length - 4)}
-          <button 
-            className="disconnect-button"
-            onClick={disconnectWallet}
-          >
-            Disconnect
-          </button>
+      {showError && error && (
+        <div className={compact ? "wallet-error-tooltip" : "error-message"}>
+          {error}
         </div>
       )}
     </div>
