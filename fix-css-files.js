@@ -7,160 +7,335 @@ function log(message) {
   console.log(`[${new Date().toISOString()}] ${message}`);
 }
 
-// Main function to fix CSS files
+// Function to recursively find all CSS files
+function findCssFiles(dir, fileList = []) {
+  const files = fs.readdirSync(dir);
+  
+  files.forEach(file => {
+    const filePath = path.join(dir, file);
+    const stat = fs.statSync(filePath);
+    
+    if (stat.isDirectory() && file !== 'node_modules' && file !== 'build') {
+      fileList = findCssFiles(filePath, fileList);
+    } else if (path.extname(file) === '.css') {
+      fileList.push(filePath);
+    }
+  });
+  
+  return fileList;
+}
+
+// Function to fix CSS syntax issues
+function fixCssFile(filePath) {
+  log(`Checking CSS file: ${filePath}`);
+  let content = fs.readFileSync(filePath, 'utf8');
+  let fixed = false;
+  
+  // Fix common CSS syntax issues
+  
+  // 1. Fix unclosed comments
+  if (content.includes('/*') && !content.includes('*/')) {
+    content = content.replace(/\/\*([^*]|\*(?!\/))*$/, '');
+    fixed = true;
+    log(`Fixed unclosed comment in ${filePath}`);
+  }
+  
+  // 2. Fix unescaped forward slashes in URLs
+  content = content.replace(/url\(([^)]*\/\/[^)]*)\)/g, (match, url) => {
+    if (!url.startsWith('"') && !url.startsWith("'")) {
+      return `url("${url}")`;
+    }
+    return match;
+  });
+  
+  // 3. Fix incomplete rules (like .cta-)
+  content = content.replace(/\.[a-zA-Z0-9_-]+-([\s\r\n}])/g, (match, ending) => {
+    log(`Fixed incomplete CSS selector in ${filePath}`);
+    fixed = true;
+    return `.placeholder${ending}`;
+  });
+  
+  // 4. Fix missing closing braces
+  const openBraces = (content.match(/\{/g) || []).length;
+  const closeBraces = (content.match(/\}/g) || []).length;
+  if (openBraces > closeBraces) {
+    content = content + '\n}'.repeat(openBraces - closeBraces);
+    fixed = true;
+    log(`Fixed ${openBraces - closeBraces} missing closing braces in ${filePath}`);
+  }
+  
+  // 5. Fix missing semicolons
+  content = content.replace(/([a-zA-Z0-9%#)])\s*\n\s*([a-zA-Z-])/g, '$1;\n$2');
+  
+  // 6. Fix invalid calc() expressions
+  content = content.replace(/calc\(([^)]+)\/([^)]+)\)/g, (match, a, b) => {
+    return `calc(${a} / ${b})`;
+  });
+  
+  // Write fixed content back to file
+  if (fixed) {
+    fs.writeFileSync(filePath, content);
+    log(`Fixed and saved ${filePath}`);
+  } else {
+    log(`No issues found in ${filePath}`);
+  }
+}
+
+// Main function
 function fixCssFiles() {
   try {
     log('Starting CSS files fix...');
-
-    // Create directories if they don't exist
-    const dirs = ['src/pages', 'src/components'];
-    for (const dir of dirs) {
-      if (!fs.existsSync(dir)) {
-        fs.mkdirSync(dir, { recursive: true });
-        log(`Created directory: ${dir}`);
-      }
-    }
-
-    // Fix ProjectsPage.css
-    log('Creating ProjectsPage.css...');
-    const projectsPageCssContent = `.projects-page {
-  min-height: calc(100vh - 70px - 200px);
+    
+    // Find all CSS files
+    const cssFiles = findCssFiles('src');
+    log(`Found ${cssFiles.length} CSS files to check`);
+    
+    // Fix each file
+    cssFiles.forEach(fixCssFile);
+    
+    // Create known good CSS files for critical components
+    createKnownGoodCssFiles();
+    
+    log('CSS files fix completed successfully!');
+  } catch (error) {
+    log(`Error during CSS files fix: ${error.message}`);
+    process.exit(1);
+  }
 }
 
-.page-header {
-  background: linear-gradient(135deg, var(--background-light) 0%, var(--background-dark) 100%);
-  padding: 60px 0;
-  text-align: center;
-  margin-bottom: 40px;
+// Function to create known good CSS files for critical components
+function createKnownGoodCssFiles() {
+  // App.css - Main application styles
+  const appCssPath = path.join('src', 'App.css');
+  const appCssContent = `/* App.css - Main application styles */
+:root {
+  --primary-color: #f6851b;
+  --primary-hover: #e2761b;
+  --background-dark: #121212;
+  --background-light: #1e1e1e;
+  --background-card: #2a2a2a;
+  --text-light: #f5f5f5;
+  --text-muted: #a0a0a0;
+  --border-radius-sm: 4px;
+  --border-radius-md: 8px;
+  --border-radius-lg: 12px;
+  --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.1);
+  --shadow-md: 0 4px 8px rgba(0, 0, 0, 0.2);
+  --transition-normal: 0.3s ease;
 }
 
-.page-header h1 {
-  font-size: 2.5rem;
-  margin-bottom: 1rem;
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
 }
 
-.page-subtitle {
-  font-size: 1.2rem;
-  color: var(--text-muted);
-  max-width: 800px;
-  margin: 0 auto;
-}
-
-.projects-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 30px;
-  margin-top: 40px;
-}
-
-.project-card {
-  background-color: var(--background-card);
-  border-radius: var(--border-radius-md);
-  overflow: hidden;
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
-}
-
-.project-card:hover {
-  transform: translateY(-5px);
-  box-shadow: var(--shadow-md);
-}
-
-.project-image {
-  width: 100%;
-  height: 200px;
-  object-fit: cover;
-}
-
-.project-content {
-  padding: 20px;
-}
-
-.project-title {
-  font-size: 1.25rem;
-  margin-bottom: 10px;
-}
-
-.project-director {
-  color: var(--text-muted);
-  margin-bottom: 15px;
-  font-size: 0.9rem;
-}
-
-.project-description {
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+  background-color: var(--background-dark);
   color: var(--text-light);
-  margin-bottom: 20px;
-  font-size: 0.95rem;
+  line-height: 1.6;
 }
 
-.project-stats {
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 15px;
+.container {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
 }
 
-.stat-item {
-  text-align: center;
+/* Header styles */
+header {
+  background-color: rgba(18, 18, 18, 0.8);
+  backdrop-filter: blur(10px);
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  padding: 15px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-.stat-value {
-  font-size: 1.1rem;
-  font-weight: 600;
-  color: var(--primary-color);
-}
-
-.stat-label {
-  font-size: 0.8rem;
-  color: var(--text-muted);
-}
-
-.project-footer {
+.header-container {
   display: flex;
   justify-content: space-between;
   align-items: center;
 }
 
-.project-status {
-  padding: 5px 10px;
-  border-radius: 20px;
-  font-size: 0.8rem;
+.logo {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--primary-color);
+  text-decoration: none;
+}
+
+.nav-menu {
+  display: flex;
+  gap: 20px;
+}
+
+.nav-link {
+  color: var(--text-light);
+  text-decoration: none;
   font-weight: 500;
+  transition: color var(--transition-normal);
 }
 
-.status-funding {
-  background-color: rgba(25, 118, 210, 0.1);
-  color: #1976d2;
+.nav-link:hover, .nav-link.active {
+  color: var(--primary-color);
 }
 
-.status-production {
-  background-color: rgba(246, 133, 27, 0.1);
-  color: #f6851b;
+.wallet-btn {
+  background-color: var(--primary-color);
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: var(--border-radius-sm);
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: background-color var(--transition-normal);
 }
 
-.status-completed {
-  background-color: rgba(76, 175, 80, 0.1);
-  color: #4caf50;
+.wallet-btn:hover {
+  background-color: var(--primary-hover);
 }
 
+/* Mobile menu */
+.mobile-menu-btn {
+  display: none;
+  background: none;
+  border: none;
+  color: var(--text-light);
+  font-size: 1.5rem;
+  cursor: pointer;
+}
+
+/* Footer styles */
+footer {
+  background-color: var(--background-dark);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 40px 0;
+  margin-top: 60px;
+}
+
+.footer-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 40px;
+}
+
+.footer-column h3 {
+  color: var(--primary-color);
+  margin-bottom: 20px;
+  font-size: 1.1rem;
+}
+
+.footer-links {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.footer-link {
+  color: var(--text-muted);
+  text-decoration: none;
+  transition: color var(--transition-normal);
+}
+
+.footer-link:hover {
+  color: var(--text-light);
+}
+
+.social-links {
+  display: flex;
+  gap: 15px;
+  margin-top: 15px;
+}
+
+.social-link {
+  color: var(--text-muted);
+  font-size: 1.2rem;
+  transition: color var(--transition-normal);
+}
+
+.social-link:hover {
+  color: var(--primary-color);
+}
+
+.footer-bottom {
+  margin-top: 40px;
+  padding-top: 20px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+
+/* Button styles */
+.btn-primary {
+  background-color: var(--primary-color);
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: var(--border-radius-sm);
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background-color var(--transition-normal);
+}
+
+.btn-primary:hover {
+  background-color: var(--primary-hover);
+}
+
+.btn-secondary {
+  background-color: transparent;
+  color: var(--text-light);
+  border: 1px solid var(--text-light);
+  padding: 10px 20px;
+  border-radius: var(--border-radius-sm);
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background-color var(--transition-normal);
+}
+
+.btn-secondary:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Responsive styles */
 @media (max-width: 768px) {
-  .page-header {
-    padding: 40px 0;
+  .mobile-menu-btn {
+    display: block;
   }
-  
-  .page-header h1 {
-    font-size: 2rem;
+
+  .nav-menu {
+    position: fixed;
+    top: 70px;
+    left: 0;
+    right: 0;
+    background-color: var(--background-dark);
+    flex-direction: column;
+    padding: 20px;
+    gap: 15px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    transform: translateY(-100%);
+    opacity: 0;
+    pointer-events: none;
+    transition: all 0.3s ease;
   }
-  
-  .projects-grid {
-    grid-template-columns: 1fr;
+
+  .nav-menu.active {
+    transform: translateY(0);
+    opacity: 1;
+    pointer-events: auto;
   }
 }`;
 
-    fs.writeFileSync('src/pages/ProjectsPage.css', projectsPageCssContent);
-    log('Created ProjectsPage.css');
+  fs.writeFileSync(appCssPath, appCssContent);
+  log(`Created/Updated ${appCssPath}`);
 
-    // Fix HomePage.css
-    log('Creating HomePage.css...');
-    const homePageCssContent = `.hero-section {
+  // HomePage.css - Styles for the home page
+  const homePageCssPath = path.join('src', 'pages', 'HomePage.css');
+  const homePageCssContent = `.hero-section {
   padding: 80px 0;
   background: linear-gradient(135deg, var(--background-light) 0%, var(--background-dark) 100%);
   text-align: center;
@@ -360,791 +535,71 @@ function fixCssFiles() {
   }
 }`;
 
-    fs.writeFileSync('src/pages/HomePage.css', homePageCssContent);
-    log('Created HomePage.css');
-
-    // Fix MarketplacePage.css
-    log('Creating MarketplacePage.css...');
-    const marketplacePageCssContent = `.marketplace-page {
-  min-height: calc(100vh - 70px - 200px);
-}
-
-.nft-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 30px;
-  margin-top: 40px;
-}
-
-.nft-card {
-  background-color: var(--background-card);
-  border-radius: var(--border-radius-md);
-  overflow: hidden;
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
-}
-
-.nft-card:hover {
-  transform: translateY(-5px);
-  box-shadow: var(--shadow-md);
-}
-
-.nft-image {
-  width: 100%;
-  height: 280px;
-  object-fit: cover;
-}
-
-.nft-content {
-  padding: 20px;
-}
-
-.nft-title {
-  font-size: 1.25rem;
-  margin-bottom: 10px;
-}
-
-.nft-film {
-  color: var(--text-muted);
-  margin-bottom: 15px;
-  font-size: 0.9rem;
-}
-
-.nft-description {
-  color: var(--text-light);
-  margin-bottom: 20px;
-  font-size: 0.95rem;
-}
-
-.nft-price {
-  display: flex;
-  align-items: center;
-  margin-bottom: 20px;
-}
-
-.price-value {
-  font-size: 1.2rem;
-  font-weight: 600;
-  color: var(--primary-color);
-  margin-right: 5px;
-}
-
-.price-currency {
-  font-size: 0.9rem;
-  color: var(--text-muted);
-}
-
-.nft-footer {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.nft-creator {
-  display: flex;
-  align-items: center;
-}
-
-.creator-avatar {
-  width: 30px;
-  height: 30px;
-  border-radius: 50%;
-  margin-right: 10px;
-}
-
-.creator-name {
-  font-size: 0.9rem;
-  color: var(--text-muted);
-}
-
-.nft-button {
-  background-color: var(--primary-color);
-  color: white;
-  border: none;
-  padding: 8px 16px;
-  border-radius: var(--border-radius-sm);
-  font-size: 0.9rem;
-  cursor: pointer;
-  transition: background-color 0.3s ease;
-}
-
-.nft-button:hover {
-  background-color: var(--primary-hover);
-}
-
-.marketplace-filters {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 15px;
-  margin-bottom: 30px;
-}
-
-.filter-button {
-  background-color: var(--background-card);
-  color: var(--text-light);
-  border: none;
-  padding: 8px 16px;
-  border-radius: var(--border-radius-sm);
-  font-size: 0.9rem;
-  cursor: pointer;
-  transition: all 0.3s ease;
-}
-
-.filter-button.active {
-  background-color: var(--primary-color);
-  color: white;
-}
-
-.filter-button:hover:not(.active) {
-  background-color: rgba(246, 133, 27, 0.1);
-}
-
-@media (max-width: 768px) {
-  .nft-grid {
-    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-  }
-}
-
-@media (max-width: 480px) {
-  .nft-grid {
-    grid-template-columns: 1fr;
+  // Create directory if it doesn't exist
+  if (!fs.existsSync(path.dirname(homePageCssPath))) {
+    fs.mkdirSync(path.dirname(homePageCssPath), { recursive: true });
   }
   
-  .marketplace-filters {
-    flex-direction: column;
-    gap: 10px;
-  }
-}`;
+  fs.writeFileSync(homePageCssPath, homePageCssContent);
+  log(`Created/Updated ${homePageCssPath}`);
 
-    fs.writeFileSync('src/pages/MarketplacePage.css', marketplacePageCssContent);
-    log('Created MarketplacePage.css');
-
-    // Fix GovernancePage.css
-    log('Creating GovernancePage.css...');
-    const governancePageCssContent = `.governance-page {
-  min-height: calc(100vh - 70px - 200px);
-}
-
-.governance-tabs {
-  display: flex;
-  gap: 1rem;
-  margin-bottom: 2rem;
-  overflow-x: auto;
-  padding-bottom: 0.5rem;
-}
-
-.tab-btn {
-  padding: 0.75rem 1.5rem;
-  background-color: var(--background-card);
-  color: var(--text-light);
-  border: none;
-  border-radius: var(--border-radius-sm);
-  cursor: pointer;
-  transition: background-color var(--transition-normal);
-  white-space: nowrap;
-}
-
-.tab-btn.active {
-  background-color: var(--primary-color);
-  color: white;
-}
-
-.tab-btn:hover:not(.active) {
-  background-color: rgba(246, 133, 27, 0.1);
-}
-
-.section-header-with-action {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 2rem;
-}
-
-.section-header-with-action h2 {
-  font-size: 1.75rem;
-  color: var(--text-light);
-}
-
-.proposals-list {
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
-}
-
-.proposal-card {
+  // MetaMaskConnector.css - Styles for the MetaMask connector component
+  const metaMaskCssPath = path.join('src', 'components', 'MetaMaskConnector.css');
+  const metaMaskCssContent = `.metamask-container {
   background-color: var(--background-card);
   border-radius: var(--border-radius-md);
-  padding: 1.5rem;
+  padding: 20px;
+  margin: 20px 0;
+  max-width: 500px;
   box-shadow: var(--shadow-sm);
 }
 
-.proposal-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: 1rem;
+.metamask-button {
+  background-color: #f6851b;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 4px;
+  font-size: 16px;
+  cursor: pointer;
+  margin-top: 10px;
+  text-decoration: none;
+  display: inline-block;
 }
 
-.proposal-header h3 {
-  font-size: 1.25rem;
-  margin-right: 1rem;
+.metamask-button:hover {
+  background-color: #e2761b;
 }
 
-.status-badge {
-  padding: 0.25rem 0.75rem;
-  border-radius: 1rem;
-  font-size: 0.8rem;
-  font-weight: 500;
+.status-message {
+  margin: 10px 0;
+  font-weight: bold;
 }
 
-.status-badge.active {
-  background-color: rgba(25, 118, 210, 0.1);
-  color: #1976d2;
-}
-
-.status-badge.passed {
-  background-color: rgba(76, 175, 80, 0.1);
-  color: #4caf50;
-}
-
-.status-badge.rejected {
+.error-message {
   background-color: rgba(220, 53, 69, 0.1);
   color: #dc3545;
-}
-
-.proposal-description {
-  color: var(--text-muted);
-  margin-bottom: 1.5rem;
-}
-
-.proposal-stats {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 1rem;
-  margin-bottom: 1.5rem;
-}
-
-.stat-item {
-  display: flex;
-  align-items: center;
-}
-
-.stat-label {
-  color: var(--text-muted);
-  margin-right: 0.5rem;
-  font-size: 0.9rem;
-}
-
-.stat-value {
-  color: var(--text-light);
-  font-size: 0.9rem;
-}
-
-.voting-progress {
-  margin-bottom: 1.5rem;
-}
-
-.progress-label {
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 0.5rem;
-  font-size: 0.9rem;
-}
-
-.progress-bar {
-  height: 8px;
-  background-color: rgba(255, 255, 255, 0.1);
+  padding: 10px;
   border-radius: 4px;
-  overflow: hidden;
+  margin: 10px 0;
 }
 
-.progress-for {
-  height: 100%;
-  background-color: var(--primary-color);
-}
-
-.voting-actions {
-  display: flex;
-  gap: 1rem;
-}
-
-.vote-btn {
-  padding: 0.5rem 1rem;
-  border-radius: var(--border-radius-sm);
-  font-size: 0.9rem;
-  font-weight: 500;
-  cursor: pointer;
-  border: none;
-  transition: all 0.3s ease;
-}
-
-.vote-for {
-  background-color: rgba(76, 175, 80, 0.1);
-  color: #4caf50;
-}
-
-.vote-for:hover {
-  background-color: rgba(76, 175, 80, 0.2);
-}
-
-.vote-against {
-  background-color: rgba(220, 53, 69, 0.1);
-  color: #dc3545;
-}
-
-.vote-against:hover {
-  background-color: rgba(220, 53, 69, 0.2);
-}
-
-.treasury-section {
-  margin-bottom: 3rem;
-}
-
-.treasury-balance {
-  margin-bottom: 2rem;
-}
-
-.balance-card {
-  background-color: var(--background-card);
-  border-radius: var(--border-radius-md);
-  padding: 1.5rem;
-  text-align: center;
-  box-shadow: var(--shadow-sm);
-}
-
-.balance-card h3 {
-  font-size: 1.1rem;
-  margin-bottom: 0.5rem;
-  color: var(--text-muted);
-}
-
-.balance-amount {
-  font-size: 2rem;
-  font-weight: 700;
-  color: var(--primary-color);
-}
-
-.allocations-chart {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-}
-
-.allocation-item {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-.allocation-info {
-  display: flex;
-  justify-content: space-between;
-}
-
-.allocation-category {
-  color: var(--text-light);
-}
-
-.allocation-amount {
-  color: var(--text-muted);
-}
-
-.allocation-bar {
-  height: 8px;
-  background-color: rgba(255, 255, 255, 0.1);
+.account-info {
+  background-color: rgba(40, 167, 69, 0.1);
+  color: #28a745;
+  padding: 10px;
   border-radius: 4px;
-  overflow: hidden;
-}
-
-.allocation-fill {
-  height: 100%;
-}
-
-.allocation-percentage {
-  text-align: right;
-  font-size: 0.9rem;
-  color: var(--text-muted);
-}
-
-.voting-power-section {
-  margin-bottom: 3rem;
-}
-
-.voting-power-info {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 1.5rem;
-  margin-top: 2rem;
-}
-
-.info-card {
-  background-color: var(--background-card);
-  border-radius: var(--border-radius-md);
-  padding: 1.5rem;
-  text-align: center;
-  box-shadow: var(--shadow-sm);
-}
-
-.info-card h3 {
-  font-size: 1.1rem;
-  margin-bottom: 0.5rem;
-  color: var(--text-muted);
-}
-
-.info-value {
-  font-size: 1.5rem;
-  font-weight: 700;
-  color: var(--primary-color);
-}
-
-.connect-wallet-message {
-  background-color: var(--background-card);
-  border-radius: var(--border-radius-md);
-  padding: 2rem;
-  text-align: center;
-  box-shadow: var(--shadow-sm);
-}
-
-.connect-wallet-message p {
-  margin-bottom: 1.5rem;
-  color: var(--text-muted);
-}
-
-@media (max-width: 768px) {
-  .governance-tabs {
-    flex-wrap: wrap;
-  }
-  
-  .section-header-with-action {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 1rem;
-  }
-  
-  .voting-power-info {
-    grid-template-columns: 1fr;
-  }
+  margin: 10px 0;
 }`;
 
-    fs.writeFileSync('src/pages/GovernancePage.css', governancePageCssContent);
-    log('Created GovernancePage.css');
-
-    // Fix HyrePage.css
-    log('Creating HyrePage.css...');
-    const hyrePageCssContent = `.hyre-page {
-  min-height: calc(100vh - 70px - 200px);
-}
-
-.jobs-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 30px;
-  margin-top: 40px;
-}
-
-.job-card {
-  background-color: var(--background-card);
-  border-radius: var(--border-radius-md);
-  padding: 25px;
-  box-shadow: var(--shadow-sm);
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
-}
-
-.job-card:hover {
-  transform: translateY(-5px);
-  box-shadow: var(--shadow-md);
-}
-
-.job-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: 15px;
-}
-
-.job-title {
-  font-size: 1.25rem;
-  margin-bottom: 5px;
-}
-
-.job-company {
-  color: var(--text-muted);
-  font-size: 0.9rem;
-}
-
-.job-type {
-  padding: 5px 10px;
-  border-radius: 20px;
-  font-size: 0.8rem;
-  font-weight: 500;
-}
-
-.job-type.full-time {
-  background-color: rgba(76, 175, 80, 0.1);
-  color: #4caf50;
-}
-
-.job-type.part-time {
-  background-color: rgba(25, 118, 210, 0.1);
-  color: #1976d2;
-}
-
-.job-type.contract {
-  background-color: rgba(246, 133, 27, 0.1);
-  color: #f6851b;
-}
-
-.job-description {
-  color: var(--text-muted);
-  margin-bottom: 20px;
-  font-size: 0.95rem;
-}
-
-.job-details {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 15px;
-  margin-bottom: 20px;
-}
-
-.job-detail {
-  display: flex;
-  align-items: center;
-  font-size: 0.9rem;
-  color: var(--text-light);
-}
-
-.detail-icon {
-  margin-right: 8px;
-  color: var(--primary-color);
-}
-
-.job-skills {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  margin-bottom: 20px;
-}
-
-.skill-tag {
-  background-color: rgba(255, 255, 255, 0.1);
-  color: var(--text-light);
-  padding: 5px 10px;
-  border-radius: 20px;
-  font-size: 0.8rem;
-}
-
-.job-footer {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.job-date {
-  font-size: 0.8rem;
-  color: var(--text-muted);
-}
-
-.apply-button {
-  background-color: var(--primary-color);
-  color: white;
-  border: none;
-  padding: 8px 16px;
-  border-radius: var(--border-radius-sm);
-  font-size: 0.9rem;
-  cursor: pointer;
-  transition: background-color 0.3s ease;
-}
-
-.apply-button:hover {
-  background-color: var(--primary-hover);
-}
-
-.job-filters {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 15px;
-  margin-bottom: 30px;
-}
-
-.filter-button {
-  background-color: var(--background-card);
-  color: var(--text-light);
-  border: none;
-  padding: 8px 16px;
-  border-radius: var(--border-radius-sm);
-  font-size: 0.9rem;
-  cursor: pointer;
-  transition: all 0.3s ease;
-}
-
-.filter-button.active {
-  background-color: var(--primary-color);
-  color: white;
-}
-
-.filter-button:hover:not(.active) {
-  background-color: rgba(246, 133, 27, 0.1);
-}
-
-@media (max-width: 768px) {
-  .jobs-grid {
-    grid-template-columns: 1fr;
+  // Create directory if it doesn't exist
+  if (!fs.existsSync(path.dirname(metaMaskCssPath))) {
+    fs.mkdirSync(path.dirname(metaMaskCssPath), { recursive: true });
   }
   
-  .job-filters {
-    flex-direction: column;
-    gap: 10px;
-  }
-}`;
-
-    fs.writeFileSync('src/pages/HyrePage.css', hyrePageCssContent);
-    log('Created HyrePage.css');
-
-    // Fix AboutPage.css
-    log('Creating AboutPage.css...');
-    const aboutPageCssContent = `.about-page {
-  min-height: calc(100vh - 70px - 200px);
+  fs.writeFileSync(metaMaskCssPath, metaMaskCssContent);
+  log(`Created/Updated ${metaMaskCssPath}`);
 }
 
-.about-content {
-  padding: 40px 0;
-}
-
-.about-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 40px;
-  align-items: center;
-}
-
-.about-text h2 {
-  font-size: 2rem;
-  margin-bottom: 20px;
-  color: var(--text-light);
-}
-
-.about-text p {
-  margin-bottom: 20px;
-  color: var(--text-muted);
-  line-height: 1.7;
-}
-
-.about-image {
-  position: relative;
-  height: 400px;
-  border-radius: var(--border-radius-md);
-  overflow: hidden;
-  box-shadow: var(--shadow-md);
-}
-
-.about-image img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.team-section {
-  padding: 60px 0;
-  background-color: var(--background-light);
-}
-
-.team-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-  gap: 30px;
-  margin-top: 40px;
-}
-
-.team-card {
-  background-color: var(--background-card);
-  border-radius: var(--border-radius-md);
-  overflow: hidden;
-  box-shadow: var(--shadow-sm);
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
-}
-
-.team-card:hover {
-  transform: translateY(-5px);
-  box-shadow: var(--shadow-md);
-}
-
-.team-image {
-  width: 100%;
-  height: 250px;
-  object-fit: cover;
-}
-
-.team-content {
-  padding: 20px;
-  text-align: center;
-}
-
-.team-name {
-  font-size: 1.25rem;
-  margin-bottom: 5px;
-}
-
-.team-role {
-  color: var(--primary-color);
-  margin-bottom: 15px;
-  font-size: 0.9rem;
-}
-
-.team-bio {
-  color: var(--text-muted);
-  margin-bottom: 20px;
-  font-size: 0.95rem;
-}
-
-.team-social {
-  display: flex;
-  justify-content: center;
-  gap: 15px;
-}
-
-.social-link {
-  color: var(--text-muted);
-  font-size: 1.2rem;
-  transition: color 0.3s ease;
-}
-
-.social-link:hover {
-  color: var(--primary-color);
-}
-
-.roadmap-section {
-  padding: 60px 0;
-}
-
-.roadmap-timeline {
-  position: relative;
-  max-width: 800px;
-  margin: 40px auto 0;
-}
-
-.roadmap-timeline::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  left: 50%;
-  width: 2px;
-  background-color: rgba(255, 255, 255, 0.1);
-  transform: translateX(-50%);
-}
-
-.timeline-item {
-  position: relative;
-  margin-bottom: 60px;
-}
-
-.timeline-item:last-child {
-  margin-bottom: 0;
-}
-
-.timeline-content {
-  position: relative;
-  width: calc(50% - 30px);
-  padding: 20px;
-  background-color: var(--background-card);
-  border-radius:
+// Run the fix
+fixCssFiles();
